@@ -9,11 +9,29 @@ interface SidebarItemProps {
   href: string
   icon: LucideIcon
   label: string
+  collapsed?: boolean
 }
 
-export function SidebarItem({ href, icon: Icon, label }: SidebarItemProps) {
+export function SidebarItem({ href, icon: Icon, label, collapsed }: SidebarItemProps) {
   const pathname = usePathname()
   const isActive = pathname === href || pathname.startsWith(href + '/')
+
+  if (collapsed) {
+    return (
+      <Link
+        href={href}
+        title={label}
+        className={cn(
+          'flex items-center justify-center w-10 h-10 mx-auto rounded-lg transition-all duration-150',
+          isActive
+            ? 'bg-[rgba(0,102,255,0.15)] text-[#0066FF]'
+            : 'text-slate-500 hover:text-white hover:bg-white/[0.06]'
+        )}
+      >
+        <Icon className="w-4 h-4 shrink-0" />
+      </Link>
+    )
+  }
 
   return (
     <Link
@@ -28,7 +46,7 @@ export function SidebarItem({ href, icon: Icon, label }: SidebarItemProps) {
       <Icon
         className={cn('w-4 h-4 shrink-0', isActive ? 'text-[#0066FF]' : 'text-slate-500')}
       />
-      <span>{label}</span>
+      <span className="truncate">{label}</span>
     </Link>
   )
 }
