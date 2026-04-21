@@ -16,7 +16,7 @@ export function ContactsTable({ campaignId, companyId }: ContactsTableProps) {
     return (
       <div className="space-y-2">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-10 bg-white/[0.03] rounded-lg animate-pulse" />
+          <div key={i} className="h-10 bg-[#03182F]/5 rounded-lg animate-pulse" />
         ))}
       </div>
     )
@@ -24,7 +24,7 @@ export function ContactsTable({ campaignId, companyId }: ContactsTableProps) {
 
   if (!contacts?.length) {
     return (
-      <div className="text-center py-16 text-slate-500 text-sm">
+      <div className="text-center py-16 text-[#30373E]/60 text-sm">
         Aucun contact identifié pour le moment.
       </div>
     )
@@ -34,39 +34,39 @@ export function ContactsTable({ campaignId, companyId }: ContactsTableProps) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-white/[0.06]">
+          <tr className="border-b border-[#03182F]/8">
             {['Contact', 'Poste', 'Email', 'LinkedIn', 'Statut mail'].map((h) => (
               <th
                 key={h}
-                className="text-left text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-3 py-3 first:pl-0 last:pr-0"
+                className="text-left text-[10px] font-semibold text-[#30373E]/50 uppercase tracking-wider px-3 py-3 first:pl-0 last:pr-0"
               >
                 {h}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-white/[0.04]">
+        <tbody className="divide-y divide-[#03182F]/5">
           {contacts.map((contact) => (
-            <tr key={contact.id} className="hover:bg-white/[0.02] transition-colors">
+            <tr key={contact.id} className="hover:bg-[#F2F8FF] transition-colors">
               <td className="px-3 py-3 first:pl-0">
-                <span className="text-white font-medium">
+                <span className="text-[#03182F] font-medium">
                   {contact.first_name} {contact.last_name}
                 </span>
               </td>
               <td className="px-3 py-3">
-                <span className="text-slate-400 text-xs">{contact.title}</span>
+                <span className="text-[#30373E]/60 text-xs">{contact.title}</span>
               </td>
               <td className="px-3 py-3">
                 {contact.email ? (
                   <a
                     href={`mailto:${contact.email}`}
-                    className="flex items-center gap-1 text-xs text-[#0066FF] hover:text-[#00C2A8] transition-colors"
+                    className="flex items-center gap-1 text-xs text-[#2764FF] hover:text-[#1a4fd8] transition-colors"
                   >
                     <Mail className="w-3 h-3" />
                     {contact.email}
                   </a>
                 ) : (
-                  <span className="text-slate-600 text-xs">—</span>
+                  <span className="text-[#30373E]/30 text-xs">—</span>
                 )}
               </td>
               <td className="px-3 py-3">
@@ -75,13 +75,13 @@ export function ContactsTable({ campaignId, companyId }: ContactsTableProps) {
                     href={contact.linkedin_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-white transition-colors"
+                    className="flex items-center gap-1 text-xs text-[#30373E]/60 hover:text-[#03182F] transition-colors"
                   >
                     <ExternalLink className="w-3 h-3" />
                     LinkedIn
                   </a>
                 ) : (
-                  <span className="text-slate-600 text-xs">—</span>
+                  <span className="text-[#30373E]/30 text-xs">—</span>
                 )}
               </td>
               <td className="px-3 py-3 last:pr-0">

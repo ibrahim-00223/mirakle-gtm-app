@@ -37,21 +37,21 @@ export function getCampaignStatusLabel(status: CampaignStatus): string {
 
 export function getCampaignStatusColor(status: CampaignStatus): string {
   const colors: Record<CampaignStatus, string> = {
-    draft: 'text-neutral-400 bg-neutral-400/10 border-neutral-400/20',
-    generating: 'text-warning bg-warning/10 border-warning/20',
-    ready: 'text-accent-blue bg-accent-blue/10 border-accent-blue/20',
-    active: 'text-accent-teal bg-accent-teal/10 border-accent-teal/20',
-    completed: 'text-success bg-success/10 border-success/20',
-    paused: 'text-neutral-500 bg-neutral-500/10 border-neutral-500/20',
+    draft: 'text-[#30373E]/70 bg-[#03182F]/5 border-[#03182F]/10',
+    generating: 'text-[#770031] bg-[#FFE7EC] border-[#F22E75]/30',
+    ready: 'text-[#2764FF] bg-[rgba(39,100,255,0.08)] border-[rgba(39,100,255,0.2)]',
+    active: 'text-[#2764FF] bg-[rgba(39,100,255,0.12)] border-[rgba(39,100,255,0.25)]',
+    completed: 'text-[#03182F] bg-[#F2F8FF] border-[#03182F]/20',
+    paused: 'text-[#30373E]/60 bg-[#03182F]/5 border-[#03182F]/10',
   }
   return colors[status]
 }
 
 export function getCompanyStatusColor(status: CompanyStatus): string {
   const colors: Record<CompanyStatus, string> = {
-    qualified: 'text-[#00C2A8] bg-[rgba(0,194,168,0.12)] border-[rgba(0,194,168,0.2)]',
-    disqualified: 'text-[#EF4444] bg-[rgba(239,68,68,0.12)] border-[rgba(239,68,68,0.2)]',
-    pending: 'text-[#F59E0B] bg-[rgba(245,158,11,0.12)] border-[rgba(245,158,11,0.2)]',
+    qualified: 'text-[#2764FF] bg-[rgba(39,100,255,0.08)] border-[rgba(39,100,255,0.2)]',
+    disqualified: 'text-[#770031] bg-[#FFE7EC] border-[#F22E75]/30',
+    pending: 'text-[#30373E]/60 bg-[#03182F]/5 border-[#03182F]/10',
   }
   return colors[status]
 }
@@ -67,10 +67,10 @@ export function getCompanyStatusLabel(status: CompanyStatus): string {
 
 export function getMailStatusColor(status: MailStatus): string {
   const colors: Record<MailStatus, string> = {
-    pending: 'text-neutral-400 bg-neutral-400/10 border-neutral-400/20',
-    sent: 'text-[#0066FF] bg-[rgba(0,102,255,0.12)] border-[rgba(0,102,255,0.2)]',
-    opened: 'text-[#F59E0B] bg-[rgba(245,158,11,0.12)] border-[rgba(245,158,11,0.2)]',
-    replied: 'text-[#10B981] bg-[rgba(16,185,129,0.12)] border-[rgba(16,185,129,0.2)]',
+    pending: 'text-[#30373E]/60 bg-[#03182F]/5 border-[#03182F]/10',
+    sent: 'text-[#2764FF] bg-[rgba(39,100,255,0.08)] border-[rgba(39,100,255,0.2)]',
+    opened: 'text-[#770031] bg-[#FFE7EC] border-[#F22E75]/30',
+    replied: 'text-[#2764FF] bg-[rgba(39,100,255,0.12)] border-[rgba(39,100,255,0.25)]',
   }
   return colors[status]
 }

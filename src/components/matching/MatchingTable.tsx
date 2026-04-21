@@ -17,7 +17,7 @@ export function MatchingTable({ campaignId }: MatchingTableProps) {
     return (
       <div className="space-y-3">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-20 bg-white/[0.03] rounded-xl animate-pulse" />
+          <div key={i} className="h-20 bg-[#03182F]/5 rounded-lg animate-pulse" />
         ))}
       </div>
     )
@@ -25,7 +25,7 @@ export function MatchingTable({ campaignId }: MatchingTableProps) {
 
   if (!sorted.length) {
     return (
-      <div className="text-center py-16 text-slate-500 text-sm">
+      <div className="text-center py-16 text-[#30373E]/60 text-sm">
         Aucun matching disponible pour le moment.
       </div>
     )
@@ -36,13 +36,13 @@ export function MatchingTable({ campaignId }: MatchingTableProps) {
       {sorted.map((company) => (
         <div
           key={company.id}
-          className="bg-white/[0.03] border border-white/[0.05] rounded-xl p-4 hover:border-white/[0.1] transition-all"
+          className="bg-[#F2F8FF] border border-[#03182F]/8 rounded-lg p-4 hover:border-[#2764FF]/25 transition-all"
         >
           <div className="flex items-start gap-4">
             {/* Left: Company info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-white font-semibold text-sm">{company.name}</span>
+                <span className="text-[#03182F] font-semibold text-sm">{company.name}</span>
                 <span
                   className={cn(
                     'inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium border',
@@ -54,7 +54,7 @@ export function MatchingTable({ campaignId }: MatchingTableProps) {
               </div>
 
               {/* Top match */}
-              <p className="text-[#00C2A8] text-xs mb-2">
+              <p className="text-[#2764FF] text-xs mb-2">
                 Top match :{' '}
                 <span className="font-semibold">{company.top_match_marketplace}</span>
               </p>
@@ -66,7 +66,7 @@ export function MatchingTable({ campaignId }: MatchingTableProps) {
 
               {/* Rationale */}
               {company.match_rationale && (
-                <p className="text-slate-500 text-xs leading-relaxed italic">
+                <p className="text-[#30373E]/60 text-xs leading-relaxed italic">
                   "{company.match_rationale}"
                 </p>
               )}
@@ -77,7 +77,7 @@ export function MatchingTable({ campaignId }: MatchingTableProps) {
               {company.status !== 'qualified' && (
                 <button
                   onClick={() => updateStatus.mutate({ id: company.id, status: 'qualified' })}
-                  className="px-3 py-1.5 text-xs font-medium text-[#00C2A8] border border-[rgba(0,194,168,0.3)] rounded-lg hover:bg-[rgba(0,194,168,0.1)] transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-[#2764FF] border border-[rgba(39,100,255,0.3)] rounded-lg hover:bg-[rgba(39,100,255,0.08)] transition-colors"
                 >
                   Qualifier
                 </button>
@@ -87,7 +87,7 @@ export function MatchingTable({ campaignId }: MatchingTableProps) {
                   onClick={() =>
                     updateStatus.mutate({ id: company.id, status: 'disqualified' })
                   }
-                  className="px-3 py-1.5 text-xs font-medium text-[#EF4444] border border-[rgba(239,68,68,0.3)] rounded-lg hover:bg-[rgba(239,68,68,0.1)] transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-[#770031] border border-[#F22E75]/30 rounded-lg hover:bg-[#FFE7EC] transition-colors"
                 >
                   Disqualifier
                 </button>

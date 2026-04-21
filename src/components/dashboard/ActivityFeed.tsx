@@ -42,17 +42,17 @@ const mockActivity: ActivityItem[] = [
 ]
 
 const icons = {
-  qualified: { Icon: CheckCircle, color: 'text-[#00C2A8]' },
-  disqualified: { Icon: TrendingUp, color: 'text-[#EF4444]' },
-  mail_sent: { Icon: Mail, color: 'text-[#0066FF]' },
-  mail_replied: { Icon: Mail, color: 'text-[#10B981]' },
-  campaign_ready: { Icon: Target, color: 'text-[#F59E0B]' },
+  qualified: { Icon: CheckCircle, color: 'text-[#2764FF]' },
+  disqualified: { Icon: TrendingUp, color: 'text-[#F22E75]' },
+  mail_sent: { Icon: Mail, color: 'text-[#2764FF]' },
+  mail_replied: { Icon: Mail, color: 'text-[#2764FF]' },
+  campaign_ready: { Icon: Target, color: 'text-[#F22E75]' },
 }
 
 export function ActivityFeed() {
   return (
-    <div className="bg-[#162035] border border-white/[0.06] rounded-xl p-5">
-      <h3 className="text-white font-semibold font-heading text-sm mb-4">Activité récente</h3>
+    <div className="bg-white border border-[#03182F]/10 rounded-lg p-5 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
+      <h3 className="text-[#03182F] font-bold text-sm mb-4">Activité récente</h3>
       <div className="space-y-3">
         {mockActivity.map((item) => {
           const { Icon, color } = icons[item.type]
@@ -62,8 +62,8 @@ export function ActivityFeed() {
                 <Icon className={`w-3.5 h-3.5 ${color}`} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-slate-300 text-xs leading-relaxed">{item.text}</p>
-                <div className="flex items-center gap-1 mt-0.5 text-slate-600 text-[10px]">
+                <p className="text-[#30373E] text-xs leading-relaxed">{item.text}</p>
+                <div className="flex items-center gap-1 mt-0.5 text-[#30373E]/40 text-[10px]">
                   <Clock className="w-2.5 h-2.5" />
                   <span>{formatRelativeDate(item.time)}</span>
                 </div>

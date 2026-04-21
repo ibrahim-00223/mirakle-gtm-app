@@ -9,19 +9,19 @@ export default function NouvelleCampagnePage() {
       <div className="mb-8">
         <Link
           href="/campagnes"
-          className="inline-flex items-center gap-1.5 text-slate-500 hover:text-white text-sm transition-colors mb-4"
+          className="inline-flex items-center gap-1.5 text-[#30373E]/60 hover:text-[#03182F] text-sm transition-colors mb-4"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Retour aux campagnes
         </Link>
-        <h1 className="text-2xl font-bold text-white font-heading">Nouvelle campagne</h1>
-        <p className="text-slate-500 text-sm mt-1">
+        <h1 className="text-[22px] leading-[32px] font-bold text-[#03182F]">Nouvelle campagne</h1>
+        <p className="text-[#30373E]/60 text-sm mt-1">
           Définissez les paramètres de ciblage — Mirakl génèrera automatiquement les prospects correspondants.
         </p>
       </div>
 
       {/* Form card */}
-      <div className="bg-[#162035] border border-white/[0.06] rounded-2xl p-6">
+      <div className="bg-white border border-[#03182F]/10 rounded-lg p-6 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
         <CampaignCreateForm />
       </div>
     </div>

@@ -60,19 +60,19 @@ export function CampaignCreateForm() {
   }
 
   const inputClass =
-    'w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-[#0066FF]/60 focus:bg-white/[0.06] transition-all'
+    'w-full bg-white border border-[#03182F]/15 rounded-lg px-3.5 py-2.5 text-[#03182F] text-sm placeholder-[#30373E]/40 focus:outline-none focus:border-[#2764FF]/60 transition-all'
 
   const selectClass =
-    'w-full bg-[#0F1F3D] border border-white/[0.08] rounded-lg px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-[#0066FF]/60 transition-all appearance-none'
+    'w-full bg-white border border-[#03182F]/15 rounded-lg px-3.5 py-2.5 text-[#03182F] text-sm focus:outline-none focus:border-[#2764FF]/60 transition-all appearance-none'
 
-  const labelClass = 'block text-slate-400 text-xs font-medium mb-1.5 uppercase tracking-wider'
+  const labelClass = 'block text-[#30373E]/60 text-xs font-medium mb-1.5 uppercase tracking-wider'
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* Campaign name */}
       <div>
         <label className={labelClass}>
-          Nom de la campagne <span className="text-[#EF4444]">*</span>
+          Nom de la campagne <span className="text-[#F22E75]">*</span>
         </label>
         <input
           type="text"
@@ -87,7 +87,7 @@ export function CampaignCreateForm() {
         {/* Sector */}
         <div>
           <label className={labelClass}>
-            Secteur cible <span className="text-[#EF4444]">*</span>
+            Secteur cible <span className="text-[#F22E75]">*</span>
           </label>
           <select
             value={form.sector}
@@ -106,7 +106,7 @@ export function CampaignCreateForm() {
         {/* Source marketplace */}
         <div>
           <label className={labelClass}>
-            Marketplace source <span className="text-[#EF4444]">*</span>
+            Marketplace source <span className="text-[#F22E75]">*</span>
           </label>
           <input
             type="text"
@@ -153,7 +153,7 @@ export function CampaignCreateForm() {
       </div>
 
       {error && (
-        <p className="text-[#EF4444] text-sm bg-[rgba(239,68,68,0.08)] border border-[rgba(239,68,68,0.2)] rounded-lg px-4 py-2.5">
+        <p className="text-[#770031] text-sm bg-[#FFE7EC] border border-[#F22E75]/30 rounded-lg px-4 py-2.5">
           {error}
         </p>
       )}
@@ -162,14 +162,14 @@ export function CampaignCreateForm() {
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-4 py-2.5 text-sm text-slate-400 hover:text-white border border-white/[0.08] rounded-lg hover:border-white/20 transition-all"
+          className="px-4 py-2.5 text-sm text-[#30373E]/70 hover:text-[#03182F] border border-[#03182F]/15 rounded-lg hover:border-[#03182F]/30 transition-all"
         >
           Annuler
         </button>
         <button
           type="submit"
           disabled={isPending}
-          className="px-6 py-2.5 text-sm font-semibold text-white bg-[#0066FF] hover:bg-[#0052CC] disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all"
+          className="px-6 py-2.5 text-sm font-semibold text-white bg-[#2764FF] hover:bg-[#1a4fd8] disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all"
         >
           {isPending ? 'Création...' : 'Créer la campagne →'}
         </button>

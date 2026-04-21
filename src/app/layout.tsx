@@ -1,25 +1,12 @@
 import type { Metadata } from 'next'
-import { Manrope, DM_Sans, DM_Mono } from 'next/font/google'
+import { Roboto_Serif } from 'next/font/google'
 import './globals.css'
 import { AppShell } from '@/components/layout/AppShell'
 import { QueryProvider } from '@/components/providers/QueryProvider'
 
-const manrope = Manrope({
+const robotoSerif = Roboto_Serif({
   subsets: ['latin'],
-  variable: '--font-manrope',
-  display: 'swap',
-})
-
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  variable: '--font-dm-sans',
-  display: 'swap',
-})
-
-const dmMono = DM_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-dm-mono',
+  variable: '--font-roboto-serif',
   display: 'swap',
 })
 
@@ -34,11 +21,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html
-      lang="fr"
-      className={`${manrope.variable} ${dmSans.variable} ${dmMono.variable} h-full`}
-    >
-      <body className="min-h-full bg-[#0F1F3D] text-white font-body antialiased">
+    <html lang="fr" className={`${robotoSerif.variable} h-full`}>
+      <body className="min-h-full bg-[#F2F8FF] text-[#03182F] font-sans antialiased">
         <QueryProvider>
           <AppShell>{children}</AppShell>
         </QueryProvider>
