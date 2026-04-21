@@ -25,7 +25,7 @@ export function CampaignTabs({ campaignId }: CampaignTabsProps) {
   return (
     <div>
       {/* Tab bar */}
-      <div className="flex items-center gap-1 border-b border-white/[0.06] mb-6">
+      <div className="flex items-center gap-1 border-b border-[#03182F]/10 mb-6">
         {tabs.map((tab) => {
           const Icon = tab.icon
           const isActive = active === tab.id
@@ -36,8 +36,8 @@ export function CampaignTabs({ campaignId }: CampaignTabsProps) {
               className={cn(
                 'flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2 -mb-px',
                 isActive
-                  ? 'text-white border-[#0066FF]'
-                  : 'text-slate-500 border-transparent hover:text-slate-300'
+                  ? 'text-[#03182F] border-[#2764FF]'
+                  : 'text-[#30373E]/50 border-transparent hover:text-[#30373E]'
               )}
             >
               <Icon className="w-3.5 h-3.5" />

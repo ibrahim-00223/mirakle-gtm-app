@@ -15,7 +15,6 @@ export function ScoreBar({ score, showLabel = true, size = 'md' }: ScoreBarProps
   useEffect(() => {
     const el = fillRef.current
     if (!el) return
-    // Start at 0, animate to score
     el.style.width = '0%'
     const timeout = setTimeout(() => {
       el.style.width = `${score}%`
@@ -26,7 +25,7 @@ export function ScoreBar({ score, showLabel = true, size = 'md' }: ScoreBarProps
   return (
     <div className="flex items-center gap-2">
       <div
-        className={`flex-1 bg-white/[0.08] rounded-full overflow-hidden ${size === 'sm' ? 'h-1.5' : 'h-2'}`}
+        className={`flex-1 bg-[#03182F]/10 rounded-full overflow-hidden ${size === 'sm' ? 'h-1.5' : 'h-2'}`}
       >
         <div
           ref={fillRef}
@@ -35,7 +34,7 @@ export function ScoreBar({ score, showLabel = true, size = 'md' }: ScoreBarProps
         />
       </div>
       {showLabel && (
-        <span className="text-xs font-mono text-slate-400 w-9 shrink-0 text-right">
+        <span className="text-xs text-[#30373E]/60 w-9 shrink-0 text-right">
           {formatScore(score)}
         </span>
       )}

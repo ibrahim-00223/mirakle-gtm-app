@@ -6,7 +6,7 @@ import { SidebarProvider, useSidebar } from './SidebarContext'
 function AppContent({ children }: { children: React.ReactNode }) {
   const { collapsed } = useSidebar()
   return (
-    <div className="flex min-h-screen bg-[#0F1F3D]">
+    <div className="flex min-h-screen bg-[#F2F8FF]">
       <Sidebar />
       <main
         className="flex-1 min-h-screen transition-all duration-300 ease-in-out"

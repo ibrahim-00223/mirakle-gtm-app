@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Plus, Target, Building2, Users, TrendingUp, Mail } from 'lucide-react'
+import { Plus, Target, Building2, Users, TrendingUp } from 'lucide-react'
 import { useCampaigns } from '@/hooks/useCampaigns'
 import { CampaignCard } from '@/components/campaigns/CampaignCard'
 import { MetricCard } from '@/components/dashboard/MetricCard'
@@ -19,8 +19,8 @@ export default function HomePage() {
     <div className="p-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white font-heading">Bonjour, équipe BDR 👋</h1>
-        <p className="text-slate-500 text-sm mt-1">
+        <h1 className="text-[22px] leading-[32px] font-bold text-[#03182F]">Bonjour, équipe BDR</h1>
+        <p className="text-[#30373E]/60 text-sm mt-1">
           Voici un résumé de vos activités sales en cours.
         </p>
       </div>
@@ -57,8 +57,8 @@ export default function HomePage() {
         {/* Active campaigns */}
         <div className="xl:col-span-2">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-white font-semibold font-heading">Campagnes actives</h2>
-            <Link href="/campagnes" className="text-[#0066FF] hover:text-[#00C2A8] text-xs transition-colors">
+            <h2 className="text-[18px] leading-[28px] font-bold text-[#03182F]">Campagnes actives</h2>
+            <Link href="/campagnes" className="text-[#2764FF] hover:text-[#1a4fd8] text-xs transition-colors">
               Voir tout →
             </Link>
           </div>
@@ -66,7 +66,7 @@ export default function HomePage() {
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[...Array(2)].map((_, i) => (
-                <div key={i} className="h-44 bg-white/[0.03] rounded-xl animate-pulse" />
+                <div key={i} className="h-44 bg-[#03182F]/5 rounded-lg animate-pulse" />
               ))}
             </div>
           ) : activeCampaigns.length ? (
@@ -76,12 +76,12 @@ export default function HomePage() {
               ))}
             </div>
           ) : (
-            <div className="bg-[#162035] border border-white/[0.06] rounded-xl p-8 text-center">
-              <Target className="w-8 h-8 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-500 text-sm mb-4">Aucune campagne active</p>
+            <div className="bg-white border border-[#03182F]/10 rounded-lg p-8 text-center shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
+              <Target className="w-8 h-8 text-[#30373E]/30 mx-auto mb-3" />
+              <p className="text-[#30373E]/60 text-sm mb-4">Aucune campagne active</p>
               <Link
                 href="/campagnes/nouvelle"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[#0066FF] hover:bg-[#0052CC] text-white text-xs font-semibold rounded-lg transition-all"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#2764FF] hover:bg-[#1a4fd8] text-white text-xs font-semibold rounded-lg transition-all"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Créer une campagne
@@ -93,21 +93,21 @@ export default function HomePage() {
           <div className="flex items-center gap-3 mt-4">
             <Link
               href="/campagnes/nouvelle"
-              className="flex items-center gap-2 px-4 py-2 bg-[#0066FF] hover:bg-[#0052CC] text-white text-xs font-semibold rounded-lg transition-all"
+              className="flex items-center gap-2 px-4 py-2 bg-[#2764FF] hover:bg-[#1a4fd8] text-white text-xs font-semibold rounded-lg transition-all"
             >
               <Plus className="w-3.5 h-3.5" />
               Nouvelle campagne
             </Link>
             <Link
               href="/contacts"
-              className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-white border border-white/[0.08] hover:border-white/20 text-xs font-medium rounded-lg transition-all"
+              className="flex items-center gap-2 px-4 py-2 text-[#30373E]/70 hover:text-[#03182F] border border-[#03182F]/10 hover:border-[#03182F]/25 text-xs font-medium rounded-lg transition-all"
             >
               <Users className="w-3.5 h-3.5" />
               Voir les contacts
             </Link>
             <Link
               href="/entreprises"
-              className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-white border border-white/[0.08] hover:border-white/20 text-xs font-medium rounded-lg transition-all"
+              className="flex items-center gap-2 px-4 py-2 text-[#30373E]/70 hover:text-[#03182F] border border-[#03182F]/10 hover:border-[#03182F]/25 text-xs font-medium rounded-lg transition-all"
             >
               <Building2 className="w-3.5 h-3.5" />
               Toutes les entreprises
