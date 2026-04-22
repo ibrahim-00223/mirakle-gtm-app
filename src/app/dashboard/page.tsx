@@ -11,9 +11,9 @@ import { mockContacts } from '@/lib/mock/contacts'
 export default function DashboardPage() {
   const { data: campaigns, isLoading } = useCampaigns()
 
-  const totalSent = mockContacts.filter((c) => c.mail_status !== 'pending').length
-  const totalOpened = mockContacts.filter((c) => ['opened', 'replied'].includes(c.mail_status)).length
-  const totalReplied = mockContacts.filter((c) => c.mail_status === 'replied').length
+  const totalSent = mockContacts.filter((c) => c.outreach_status !== 'pending').length
+  const totalOpened = mockContacts.filter((c) => ['opened', 'replied'].includes(c.outreach_status)).length
+  const totalReplied = mockContacts.filter((c) => c.outreach_status === 'replied').length
 
   const openRate = totalSent ? Math.round((totalOpened / totalSent) * 100) : 0
   const replyRate = totalSent ? Math.round((totalReplied / totalSent) * 100) : 0

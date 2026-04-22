@@ -3,6 +3,7 @@
 import { useCompanies } from '@/hooks/useCompanies'
 import { ScoreBar } from './ScoreBar'
 import { cn, getCompanyStatusColor, getCompanyStatusLabel } from '@/lib/utils'
+import type { CompanyWithCampaignContext } from '@/types'
 
 interface MatchingTableProps {
   campaignId?: string
@@ -11,7 +12,9 @@ interface MatchingTableProps {
 export function MatchingTable({ campaignId }: MatchingTableProps) {
   const { data: companies, isLoading, updateStatus } = useCompanies({ campaignId })
 
-  const sorted = [...(companies || [])].sort((a, b) => b.match_score - a.match_score)
+  const sorted = [...((companies as CompanyWithCampaignContext[]) || [])].sort(
+    (a, b) => (b.match_score ?? 0) - (a.match_score ?? 0)
+  )
 
   if (isLoading) {
     return (
@@ -56,12 +59,12 @@ export function MatchingTable({ campaignId }: MatchingTableProps) {
               {/* Top match */}
               <p className="text-[#2764FF] text-xs mb-2">
                 Top match :{' '}
-                <span className="font-semibold">{company.top_match_marketplace}</span>
+                <span className="font-semibold">{company.top_match_marketplace_name}</span>
               </p>
 
               {/* Score bar */}
               <div className="mb-2">
-                <ScoreBar score={company.match_score} />
+                <ScoreBar score={company.match_score ?? 0} />
               </div>
 
               {/* Rationale */}
@@ -76,7 +79,7 @@ export function MatchingTable({ campaignId }: MatchingTableProps) {
             <div className="flex flex-col gap-1.5 shrink-0">
               {company.status !== 'qualified' && (
                 <button
-                  onClick={() => updateStatus.mutate({ id: company.id, status: 'qualified' })}
+                  onClick={() => updateStatus.mutate({ id: company.campaign_company_id, status: 'qualified' })}
                   className="px-3 py-1.5 text-xs font-medium text-[#2764FF] border border-[rgba(39,100,255,0.3)] rounded-lg hover:bg-[rgba(39,100,255,0.08)] transition-colors"
                 >
                   Qualifier
@@ -85,7 +88,7 @@ export function MatchingTable({ campaignId }: MatchingTableProps) {
               {company.status !== 'disqualified' && (
                 <button
                   onClick={() =>
-                    updateStatus.mutate({ id: company.id, status: 'disqualified' })
+                    updateStatus.mutate({ id: company.campaign_company_id, status: 'disqualified' })
                   }
                   className="px-3 py-1.5 text-xs font-medium text-[#770031] border border-[#F22E75]/30 rounded-lg hover:bg-[#FFE7EC] transition-colors"
                 >

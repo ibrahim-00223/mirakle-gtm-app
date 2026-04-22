@@ -3,6 +3,7 @@
 import { useCompanies } from '@/hooks/useCompanies'
 import { cn, getCompanyStatusColor, getCompanyStatusLabel } from '@/lib/utils'
 import { ScoreBar } from '@/components/matching/ScoreBar'
+import type { CompanyWithCampaignContext } from '@/types'
 
 interface CompaniesTableProps {
   campaignId?: string
@@ -57,7 +58,7 @@ export function CompaniesTable({ campaignId }: CompaniesTableProps) {
           </tr>
         </thead>
         <tbody className="divide-y divide-[#03182F]/5">
-          {companies.map((company) => (
+          {(companies as CompanyWithCampaignContext[]).map((company) => (
             <tr key={company.id} className="hover:bg-[#F2F8FF] transition-colors group">
               <td className="px-3 py-3 first:pl-0">
                 <span className="text-[#03182F] font-medium">{company.name}</span>
@@ -67,14 +68,14 @@ export function CompaniesTable({ campaignId }: CompaniesTableProps) {
               </td>
               <td className="px-3 py-3">
                 <div className="flex flex-wrap gap-1">
-                  {company.marketplaces?.map(marketplaceBadge)}
+                  {company.current_marketplaces?.map(marketplaceBadge)}
                 </div>
               </td>
               <td className="px-3 py-3">
-                <span className="text-[#2764FF] text-xs font-medium">{company.top_match_marketplace}</span>
+                <span className="text-[#2764FF] text-xs font-medium">{company.top_match_marketplace_name}</span>
               </td>
               <td className="px-3 py-3 w-36">
-                <ScoreBar score={company.match_score} size="sm" />
+                <ScoreBar score={company.match_score ?? 0} size="sm" />
               </td>
               <td className="px-3 py-3">
                 <span
@@ -90,7 +91,7 @@ export function CompaniesTable({ campaignId }: CompaniesTableProps) {
                 <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   {company.status !== 'qualified' && (
                     <button
-                      onClick={() => updateStatus.mutate({ id: company.id, status: 'qualified' })}
+                      onClick={() => updateStatus.mutate({ id: company.campaign_company_id, status: 'qualified' })}
                       className="px-2 py-1 text-[10px] font-medium text-[#2764FF] border border-[rgba(39,100,255,0.3)] rounded hover:bg-[rgba(39,100,255,0.08)] transition-colors"
                     >
                       Qualifier
@@ -99,7 +100,7 @@ export function CompaniesTable({ campaignId }: CompaniesTableProps) {
                   {company.status !== 'disqualified' && (
                     <button
                       onClick={() =>
-                        updateStatus.mutate({ id: company.id, status: 'disqualified' })
+                        updateStatus.mutate({ id: company.campaign_company_id, status: 'disqualified' })
                       }
                       className="px-2 py-1 text-[10px] font-medium text-[#770031] border border-[#F22E75]/30 rounded hover:bg-[#FFE7EC] transition-colors"
                     >

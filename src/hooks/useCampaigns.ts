@@ -2,11 +2,11 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { mockCampaigns } from '@/lib/mock/campaigns'
-import type { CampaignWithStats, CreateCampaignInput } from '@/types'
+import type { Campaign, CreateCampaignInput } from '@/types'
 
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true'
 
-async function fetchCampaigns(): Promise<CampaignWithStats[]> {
+async function fetchCampaigns(): Promise<Campaign[]> {
   if (USE_MOCK) return mockCampaigns
 
   const res = await fetch('/api/campaigns')
@@ -15,17 +15,28 @@ async function fetchCampaigns(): Promise<CampaignWithStats[]> {
   return json.data
 }
 
-async function createCampaign(input: CreateCampaignInput): Promise<CampaignWithStats> {
+async function createCampaign(input: CreateCampaignInput): Promise<Campaign> {
   if (USE_MOCK) {
-    // Simulate creating a campaign in mock mode
-    const newCampaign: CampaignWithStats = {
+    const newCampaign: Campaign = {
       id: `camp-${Date.now()}`,
-      ...input,
+      name: input.name,
+      mode: input.mode ?? 'marketplace',
+      sector: input.sector,
+      source_marketplace_id: input.source_marketplace_id ?? null,
+      source_marketplace_name: input.source_marketplace_name ?? null,
+      catalog_size: input.catalog_size,
+      tone: input.tone,
+      target_regions: input.target_regions ?? [],
       status: 'generating',
-      created_at: new Date().toISOString(),
+      sdr_user_id: null,
       company_count: 0,
       contact_count: 0,
       qualified_count: 0,
+      avg_match_score: null,
+      launched_at: null,
+      completed_at: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     }
     mockCampaigns.unshift(newCampaign)
     return newCampaign

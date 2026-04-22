@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { format, formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import type { CampaignStatus, CompanyStatus, MailStatus } from '@/types'
+import type { CampaignStatus, CompanyStatus, OutreachStatus } from '@/types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -65,24 +65,34 @@ export function getCompanyStatusLabel(status: CompanyStatus): string {
   return labels[status]
 }
 
-export function getMailStatusColor(status: MailStatus): string {
-  const colors: Record<MailStatus, string> = {
+export function getMailStatusColor(status: OutreachStatus | null | undefined): string {
+  const colors: Partial<Record<OutreachStatus, string>> = {
     pending: 'text-[#30373E]/60 bg-[#03182F]/5 border-[#03182F]/10',
+    draft: 'text-[#30373E]/60 bg-[#03182F]/5 border-[#03182F]/10',
+    review: 'text-[#770031] bg-[#FFE7EC] border-[#F22E75]/20',
+    approved: 'text-[#2764FF] bg-[rgba(39,100,255,0.06)] border-[rgba(39,100,255,0.15)]',
     sent: 'text-[#2764FF] bg-[rgba(39,100,255,0.08)] border-[rgba(39,100,255,0.2)]',
     opened: 'text-[#770031] bg-[#FFE7EC] border-[#F22E75]/30',
+    clicked: 'text-[#770031] bg-[#FFE7EC] border-[#F22E75]/40',
     replied: 'text-[#2764FF] bg-[rgba(39,100,255,0.12)] border-[rgba(39,100,255,0.25)]',
+    bounced: 'text-[#30373E]/60 bg-[#03182F]/5 border-[#03182F]/10',
   }
-  return colors[status]
+  return colors[status ?? 'pending'] ?? 'text-[#30373E]/60 bg-[#03182F]/5 border-[#03182F]/10'
 }
 
-export function getMailStatusLabel(status: MailStatus): string {
-  const labels: Record<MailStatus, string> = {
+export function getMailStatusLabel(status: OutreachStatus | null | undefined): string {
+  const labels: Partial<Record<OutreachStatus, string>> = {
     pending: 'Non envoyé',
+    draft: 'Brouillon',
+    review: 'En révision',
+    approved: 'Approuvé',
     sent: 'Envoyé',
     opened: 'Ouvert',
+    clicked: 'Cliqué',
     replied: 'Répondu',
+    bounced: 'Bounced',
   }
-  return labels[status]
+  return labels[status ?? 'pending'] ?? 'Inconnu'
 }
 
 export function getSectorLabel(sector: string): string {

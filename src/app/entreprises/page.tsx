@@ -5,7 +5,7 @@ import { Building2, Search } from 'lucide-react'
 import { useCompanies } from '@/hooks/useCompanies'
 import { cn, getCompanyStatusColor, getCompanyStatusLabel, getSectorLabel } from '@/lib/utils'
 import { ScoreBar } from '@/components/matching/ScoreBar'
-import type { CompanyStatus } from '@/types'
+import type { CompanyStatus, CompanyWithCampaignContext } from '@/types'
 
 const statuses: { value: CompanyStatus | ''; label: string }[] = [
   { value: '', label: 'Tous les statuts' },
@@ -22,7 +22,7 @@ export default function EntreprisesPage() {
     status: statusFilter || undefined,
   })
 
-  const filtered = (companies || []).filter((c) =>
+  const filtered = ((companies || []) as CompanyWithCampaignContext[]).filter((c) =>
     search ? c.name.toLowerCase().includes(search.toLowerCase()) : true
   )
 
@@ -95,11 +95,11 @@ export default function EntreprisesPage() {
                       <span className="text-[#03182F] font-medium">{company.name}</span>
                     </td>
                     <td className="px-3 py-3">
-                      <span className="text-[#30373E]/60 text-xs">{getSectorLabel(company.sector)}</span>
+                      <span className="text-[#30373E]/60 text-xs">{getSectorLabel(company.sector ?? '')}</span>
                     </td>
                     <td className="px-3 py-3">
                       <div className="flex flex-wrap gap-1">
-                        {company.marketplaces?.map((mp) => (
+                        {company.current_marketplaces?.map((mp) => (
                           <span
                             key={mp}
                             className="px-1.5 py-0.5 rounded text-[10px] bg-[#F2F8FF] text-[#30373E]/70 border border-[#03182F]/10"
@@ -110,10 +110,10 @@ export default function EntreprisesPage() {
                       </div>
                     </td>
                     <td className="px-3 py-3">
-                      <span className="text-[#2764FF] text-xs font-medium">{company.top_match_marketplace}</span>
+                      <span className="text-[#2764FF] text-xs font-medium">{company.top_match_marketplace_name}</span>
                     </td>
                     <td className="px-3 py-3 w-36">
-                      <ScoreBar score={company.match_score} size="sm" />
+                      <ScoreBar score={company.match_score ?? 0} size="sm" />
                     </td>
                     <td className="px-3 py-3">
                       <span
@@ -130,7 +130,7 @@ export default function EntreprisesPage() {
                         {company.status !== 'qualified' && (
                           <button
                             onClick={() =>
-                              updateStatus.mutate({ id: company.id, status: 'qualified' })
+                              updateStatus.mutate({ id: company.campaign_company_id, status: 'qualified' })
                             }
                             className="px-2 py-1 text-[10px] font-medium text-[#2764FF] border border-[rgba(39,100,255,0.3)] rounded hover:bg-[rgba(39,100,255,0.08)] transition-colors"
                           >
@@ -140,7 +140,7 @@ export default function EntreprisesPage() {
                         {company.status !== 'disqualified' && (
                           <button
                             onClick={() =>
-                              updateStatus.mutate({ id: company.id, status: 'disqualified' })
+                              updateStatus.mutate({ id: company.campaign_company_id, status: 'disqualified' })
                             }
                             className="px-2 py-1 text-[10px] font-medium text-[#770031] border border-[#F22E75]/30 rounded hover:bg-[#FFE7EC] transition-colors"
                           >

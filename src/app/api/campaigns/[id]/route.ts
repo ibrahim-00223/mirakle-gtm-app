@@ -9,6 +9,7 @@ export async function GET(
     const { id } = await params
     const supabase = await createServerSupabaseClient()
 
+    // Counters are denormalized on campaigns via DB triggers
     const { data: campaign, error } = await supabase
       .from('campaigns')
       .select('*')
@@ -18,21 +19,7 @@ export async function GET(
     if (error) throw error
     if (!campaign) return NextResponse.json({ data: null, error: 'Not found' }, { status: 404 })
 
-    // Get counts
-    const [{ count: company_count }, { count: contact_count }, { count: qualified_count }] =
-      await Promise.all([
-        supabase.from('companies').select('*', { count: 'exact', head: true }).eq('campaign_id', id),
-        supabase.from('contacts').select('*', { count: 'exact', head: true }).eq('campaign_id', id),
-        supabase
-          .from('companies')
-          .select('*', { count: 'exact', head: true })
-          .eq('campaign_id', id)
-          .eq('status', 'qualified'),
-      ])
-
-    return NextResponse.json({
-      data: { ...campaign, company_count, contact_count, qualified_count },
-    })
+    return NextResponse.json({ data: campaign })
   } catch (err) {
     console.error('[GET /api/campaigns/[id]]', err)
     return NextResponse.json({ data: null, error: 'Failed to fetch campaign' }, { status: 500 })

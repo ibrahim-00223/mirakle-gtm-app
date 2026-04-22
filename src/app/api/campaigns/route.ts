@@ -23,24 +23,26 @@ export async function POST(req: NextRequest) {
   try {
     const body: CreateCampaignInput = await req.json()
 
-    if (!body.name || !body.sector || !body.source_marketplace) {
+    if (!body.name || !body.sector) {
       return NextResponse.json(
-        { data: null, error: 'name, sector and source_marketplace are required' },
+        { data: null, error: 'name and sector are required' },
         { status: 400 }
       )
     }
 
     const supabase = await createServerSupabaseClient()
 
-    // Insert campaign as draft
     const { data: campaign, error } = await supabase
       .from('campaigns')
       .insert({
         name: body.name,
         sector: body.sector,
-        source_marketplace: body.source_marketplace,
+        mode: body.mode ?? 'marketplace',
+        source_marketplace_id: body.source_marketplace_id ?? null,
+        source_marketplace_name: body.source_marketplace_name ?? null,
         catalog_size: body.catalog_size,
         tone: body.tone,
+        target_regions: body.target_regions ?? [],
         status: 'draft',
       })
       .select()
@@ -48,13 +50,14 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error
 
-    // Update status to generating
-    await supabase
-      .from('campaigns')
-      .update({ status: 'generating' })
-      .eq('id', campaign.id)
+    // If ICP mode, insert ICP parameters
+    if (body.mode === 'icp' && body.icp) {
+      await supabase.from('campaign_icp').insert({ campaign_id: campaign.id, ...body.icp })
+    }
 
-    // Trigger n8n Workflow 1 (fire and forget)
+    // Move to generating and fire n8n
+    await supabase.from('campaigns').update({ status: 'generating' }).eq('id', campaign.id)
+
     triggerWorkflow1(campaign.id, body).catch((err) =>
       console.error('[Workflow1 trigger failed]', err)
     )

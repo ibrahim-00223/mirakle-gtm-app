@@ -26,7 +26,7 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
         {/* Source marketplace */}
         <div className="mb-4">
           <span className="text-xs text-[#30373E]/50">Source : </span>
-          <span className="text-xs text-[#30373E]">{campaign.source_marketplace}</span>
+          <span className="text-xs text-[#30373E]">{campaign.source_marketplace_name}</span>
         </div>
 
         {/* Stats */}

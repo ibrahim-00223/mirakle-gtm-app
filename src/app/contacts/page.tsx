@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Users, Search, Mail, ExternalLink } from 'lucide-react'
 import { useContacts } from '@/hooks/useContacts'
 import { cn, getMailStatusColor, getMailStatusLabel, formatDate } from '@/lib/utils'
-import type { MailStatus } from '@/types'
+import type { MailStatus, ContactWithOutreachContext } from '@/types'
 
 const mailStatuses: { value: MailStatus | ''; label: string }[] = [
   { value: '', label: 'Tous les statuts' },
@@ -22,7 +22,7 @@ export default function ContactsPage() {
     mailStatus: mailFilter || undefined,
   })
 
-  const filtered = (contacts || []).filter((c) =>
+  const filtered = ((contacts || []) as ContactWithOutreachContext[]).filter((c) =>
     search
       ? `${c.first_name} ${c.last_name} ${c.title} ${c.email}`
           .toLowerCase()
@@ -135,20 +135,20 @@ export default function ContactsPage() {
                       <span
                         className={cn(
                           'inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium border',
-                          getMailStatusColor(contact.mail_status)
+                          getMailStatusColor(contact.mail_status ?? contact.outreach_status)
                         )}
                       >
-                        {getMailStatusLabel(contact.mail_status)}
+                        {getMailStatusLabel(contact.mail_status ?? contact.outreach_status)}
                       </span>
                     </td>
                     <td className="px-3 py-3">
-                      <span className="text-[#30373E]/50 text-xs">{formatDate(contact.mail_sent_at)}</span>
+                      <span className="text-[#30373E]/50 text-xs">{formatDate(contact.mail_sent_at ?? contact.sent_at)}</span>
                     </td>
                     <td className="px-3 py-3">
-                      <span className="text-[#30373E]/50 text-xs">{formatDate(contact.mail_opened_at)}</span>
+                      <span className="text-[#30373E]/50 text-xs">{formatDate(contact.mail_opened_at ?? contact.opened_at)}</span>
                     </td>
                     <td className="px-3 py-3 last:pr-0">
-                      <span className="text-[#30373E]/50 text-xs">{formatDate(contact.mail_replied_at)}</span>
+                      <span className="text-[#30373E]/50 text-xs">{formatDate(contact.mail_replied_at ?? contact.replied_at)}</span>
                     </td>
                   </tr>
                 ))}
