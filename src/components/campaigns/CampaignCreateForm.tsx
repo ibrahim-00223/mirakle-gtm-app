@@ -37,7 +37,8 @@ export function CampaignCreateForm() {
   const [form, setForm] = useState<CreateCampaignInput>({
     name: '',
     sector: '',
-    source_marketplace: '',
+    mode: 'marketplace',
+    source_marketplace_name: '',
     catalog_size: 'medium',
     tone: 'consultative',
   })
@@ -46,7 +47,7 @@ export function CampaignCreateForm() {
     e.preventDefault()
     setError(null)
 
-    if (!form.name || !form.sector || !form.source_marketplace) {
+    if (!form.name || !form.sector || !form.source_marketplace_name) {
       setError('Veuillez remplir tous les champs obligatoires.')
       return
     }
@@ -110,8 +111,8 @@ export function CampaignCreateForm() {
           </label>
           <input
             type="text"
-            value={form.source_marketplace}
-            onChange={(e) => setForm({ ...form, source_marketplace: e.target.value })}
+            value={form.source_marketplace_name}
+            onChange={(e) => setForm({ ...form, source_marketplace_name: e.target.value })}
             placeholder="Ex: Amazon FR"
             className={inputClass}
           />

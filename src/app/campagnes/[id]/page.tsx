@@ -70,7 +70,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
               <CampaignStatusBadge status={campaign.status} />
             </div>
             <p className="text-[#30373E]/60 text-sm">
-              {getSectorLabel(campaign.sector)} · {campaign.source_marketplace}
+              {getSectorLabel(campaign.sector)} · {campaign.source_marketplace_name}
             </p>
           </div>
 

@@ -3,6 +3,7 @@
 import { ExternalLink, Mail } from 'lucide-react'
 import { useContacts } from '@/hooks/useContacts'
 import { cn, getMailStatusColor, getMailStatusLabel } from '@/lib/utils'
+import type { ContactWithOutreachContext } from '@/types'
 
 interface ContactsTableProps {
   campaignId?: string
@@ -46,7 +47,7 @@ export function ContactsTable({ campaignId, companyId }: ContactsTableProps) {
           </tr>
         </thead>
         <tbody className="divide-y divide-[#03182F]/5">
-          {contacts.map((contact) => (
+          {(contacts as ContactWithOutreachContext[]).map((contact) => (
             <tr key={contact.id} className="hover:bg-[#F2F8FF] transition-colors">
               <td className="px-3 py-3 first:pl-0">
                 <span className="text-[#03182F] font-medium">
@@ -88,10 +89,10 @@ export function ContactsTable({ campaignId, companyId }: ContactsTableProps) {
                 <span
                   className={cn(
                     'inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium border',
-                    getMailStatusColor(contact.mail_status)
+                    getMailStatusColor(contact.mail_status ?? contact.outreach_status)
                   )}
                 >
-                  {getMailStatusLabel(contact.mail_status)}
+                  {getMailStatusLabel(contact.mail_status ?? contact.outreach_status)}
                 </span>
               </td>
             </tr>
