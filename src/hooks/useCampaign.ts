@@ -2,11 +2,11 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { mockCampaigns } from '@/lib/mock/campaigns'
-import type { CampaignWithStats } from '@/types'
+import type { Campaign } from '@/types'
 
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true'
 
-async function fetchCampaign(id: string): Promise<CampaignWithStats> {
+async function fetchCampaign(id: string): Promise<Campaign> {
   if (USE_MOCK) {
     const campaign = mockCampaigns.find((c) => c.id === id)
     if (!campaign) throw new Error('Campaign not found')
