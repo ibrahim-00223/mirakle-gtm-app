@@ -213,12 +213,14 @@ export async function runScrapingAgent(
       },
     }))
 
-    // Push plain assistant message (no SDK object, just raw JSON-serializable data)
-    messages.push({
+    // Build assistant message — Mistral requires content="" (not null) when tool_calls present
+    const assistantContent = typeof msg?.content === 'string' && msg.content ? msg.content : ''
+    const assistantMsg: PlainMessage = {
       role: 'assistant',
-      content: typeof msg?.content === 'string' ? msg.content : null,
+      content: assistantContent,
       tool_calls: toolCalls,
-    })
+    }
+    messages.push(assistantMsg)
 
     // Agent finished
     if (choice.finishReason === 'stop' || toolCalls.length === 0) {
