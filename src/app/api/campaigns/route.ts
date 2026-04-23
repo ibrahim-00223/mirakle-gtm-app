@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { isBrightDataConfigured, runScrapingPipeline } from '@/lib/brightdata'
 import { triggerWorkflow1 } from '@/lib/n8n/webhooks'
 import type { CreateCampaignInput } from '@/types'
 
@@ -55,12 +56,18 @@ export async function POST(req: NextRequest) {
       await supabase.from('campaign_icp').insert({ campaign_id: campaign.id, ...body.icp })
     }
 
-    // Move to generating and fire n8n
+    // Move to generating and fire scraping pipeline
     await supabase.from('campaigns').update({ status: 'generating' }).eq('id', campaign.id)
 
-    triggerWorkflow1(campaign.id, body).catch((err) =>
-      console.error('[Workflow1 trigger failed]', err)
-    )
+    if (isBrightDataConfigured()) {
+      runScrapingPipeline(campaign.id, body).catch((err) =>
+        console.error('[ScrapingPipeline failed]', err)
+      )
+    } else {
+      triggerWorkflow1(campaign.id, body).catch((err) =>
+        console.error('[Workflow1 trigger failed]', err)
+      )
+    }
 
     return NextResponse.json({ data: { ...campaign, status: 'generating' } }, { status: 201 })
   } catch (err) {
