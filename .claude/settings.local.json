@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__5e2b283d-d17d-4f94-a12e-3d7a75be9912__list_organizations",
+      "mcp__5e2b283d-d17d-4f94-a12e-3d7a75be9912__get_cost",
+      "mcp__5e2b283d-d17d-4f94-a12e-3d7a75be9912__confirm_cost",
+      "mcp__5e2b283d-d17d-4f94-a12e-3d7a75be9912__create_project",
+      "mcp__5e2b283d-d17d-4f94-a12e-3d7a75be9912__get_project_url",
+      "mcp__5e2b283d-d17d-4f94-a12e-3d7a75be9912__get_publishable_keys",
+      "mcp__5e2b283d-d17d-4f94-a12e-3d7a75be9912__apply_migration",
+      "mcp__5e2b283d-d17d-4f94-a12e-3d7a75be9912__list_tables",
+      "Bash(npx tsc *)",
+      "mcp__supabase__execute_sql",
+      "mcp__supabase__list_migrations",
+      "mcp__supabase__apply_migration",
+      "Bash(gh pr create --title 'feat: Supabase backend, normalized schema, live data' --body ' *)",
+      "Bash(npm install *)",
+      "Bash(xargs grep *)",
+      "Bash(npm uninstall *)"
+    ]
+  }
+}
