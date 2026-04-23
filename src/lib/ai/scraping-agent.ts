@@ -1,17 +1,15 @@
-import { Mistral } from '@mistralai/mistralai'
 import * as cheerio from 'cheerio'
 import { unlockUrl } from '@/lib/brightdata/client'
 import type { CreateCampaignInput } from '@/types'
 
-const mistral = new Mistral({
-  apiKey: process.env.MISTRAL_API_KEY,
-})
+const MISTRAL_API = 'https://api.mistral.ai/v1/chat/completions'
+const MISTRAL_MODEL = 'mistral-large-latest'
 
 // ── Tool definitions ─────────────────────────────────────────────────────────
 
 const TOOLS = [
   {
-    type: 'function' as const,
+    type: 'function',
     function: {
       name: 'search_web',
       description:
@@ -26,7 +24,7 @@ const TOOLS = [
     },
   },
   {
-    type: 'function' as const,
+    type: 'function',
     function: {
       name: 'scrape_page',
       description:
@@ -47,6 +45,43 @@ const TOOLS = [
     },
   },
 ]
+
+// ── Raw Mistral fetch (bypass SDK to control message format exactly) ──────────
+
+interface MistralToolCall {
+  id: string
+  type: 'function'
+  function: { name: string; arguments: string }
+}
+
+interface MistralChoice {
+  finish_reason: string
+  message: {
+    role: string
+    content: string | null
+    tool_calls?: MistralToolCall[]
+  }
+}
+
+async function mistralChat(messages: unknown[]): Promise<MistralChoice> {
+  const res = await fetch(MISTRAL_API, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.MISTRAL_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ model: MISTRAL_MODEL, messages, tools: TOOLS, tool_choice: 'auto' }),
+    signal: AbortSignal.timeout(60_000),
+  })
+
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(`Mistral API ${res.status}: ${body}`)
+  }
+
+  const data = await res.json() as { choices: MistralChoice[] }
+  return data.choices[0]
+}
 
 // ── Tool execution ────────────────────────────────────────────────────────────
 
@@ -164,18 +199,12 @@ Steps:
 
 // ── Main agent loop ───────────────────────────────────────────────────────────
 
-// Plain message types we fully control — never trust SDK objects for history
-type PlainMessage =
-  | { role: 'system'; content: string }
-  | { role: 'user'; content: string }
-  | { role: 'assistant'; content: string | null; tool_calls: Array<{ id: string; type: 'function'; function: { name: string; arguments: string } }> }
-  | { role: 'tool'; tool_call_id: string; name: string; content: string }
-
 export async function runScrapingAgent(
   input: CreateCampaignInput,
   onProgress?: (message: string) => void
 ): Promise<AgentSeller[]> {
-  const messages: PlainMessage[] = [
+  // Pure JSON objects — sent verbatim to Mistral API via raw fetch
+  const messages: unknown[] = [
     { role: 'system', content: buildSystemPrompt(input) },
     {
       role: 'user',
@@ -186,45 +215,32 @@ export async function runScrapingAgent(
   const MAX_ITERATIONS = 12
 
   for (let i = 0; i < MAX_ITERATIONS; i++) {
-    const response = await mistral.chat.complete({
-      model: 'mistral-large-latest',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      messages: messages as any,
-      tools: TOOLS,
-      toolChoice: 'auto',
-    })
-
-    const choice = response.choices?.[0]
-    if (!choice) break
-
+    const choice = await mistralChat(messages)
     const msg = choice.message
-    const rawToolCalls = msg?.toolCalls ?? []
+    const rawToolCalls = msg.tool_calls ?? []
 
-    // Build clean plain-object tool calls with guaranteed non-null IDs
-    const toolCalls = rawToolCalls.map((tc, idx) => ({
-      id: (tc.id && tc.id !== 'None' ? tc.id : `call_${i}_${idx}`),
+    // Normalize tool calls — guarantee non-null IDs
+    const toolCalls: MistralToolCall[] = rawToolCalls.map((tc, idx) => ({
+      id: tc.id && tc.id !== 'None' ? tc.id : `call_${i}_${idx}`,
       type: 'function' as const,
       function: {
         name: tc.function.name,
-        arguments:
-          typeof tc.function.arguments === 'string'
-            ? tc.function.arguments
-            : JSON.stringify(tc.function.arguments),
+        arguments: typeof tc.function.arguments === 'string'
+          ? tc.function.arguments
+          : JSON.stringify(tc.function.arguments),
       },
     }))
 
-    // Build assistant message — Mistral requires content="" (not null) when tool_calls present
-    const assistantContent = typeof msg?.content === 'string' && msg.content ? msg.content : ''
-    const assistantMsg: PlainMessage = {
-      role: 'assistant',
-      content: assistantContent,
-      tool_calls: toolCalls,
+    // Push assistant message as plain object Mistral understands
+    if (toolCalls.length > 0) {
+      messages.push({ role: 'assistant', content: msg.content ?? '', tool_calls: toolCalls })
+    } else {
+      messages.push({ role: 'assistant', content: msg.content ?? '' })
     }
-    messages.push(assistantMsg)
 
     // Agent finished
-    if (choice.finishReason === 'stop' || toolCalls.length === 0) {
-      const text = typeof msg?.content === 'string' ? msg.content : ''
+    if (choice.finish_reason === 'stop' || toolCalls.length === 0) {
+      const text = msg.content ?? ''
       onProgress?.(`Agent done after ${i + 1} iterations`)
 
       const jsonMatch = text.match(/```json\n?([\s\S]+?)\n?```/) || text.match(/(\[[\s\S]+\])/)
@@ -239,7 +255,7 @@ export async function runScrapingAgent(
       break
     }
 
-    // Execute tool calls
+    // Execute tool calls and push tool results
     for (const toolCall of toolCalls) {
       const fnName = toolCall.function.name
       const fnArgs = JSON.parse(toolCall.function.arguments) as Record<string, string>
