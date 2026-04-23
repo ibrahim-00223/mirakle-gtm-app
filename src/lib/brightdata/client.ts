@@ -35,7 +35,6 @@ export async function unlockUrl(url: string): Promise<string> {
       url,
       format: 'raw',
     }),
-    signal: AbortSignal.timeout(60_000),
   })
 
   if (!res.ok) {

@@ -71,7 +71,6 @@ async function mistralChat(messages: unknown[]): Promise<MistralChoice> {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ model: MISTRAL_MODEL, messages, tools: TOOLS, tool_choice: 'auto' }),
-    signal: AbortSignal.timeout(60_000),
   })
 
   if (!res.ok) {
