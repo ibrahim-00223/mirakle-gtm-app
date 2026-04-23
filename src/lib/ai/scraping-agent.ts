@@ -164,11 +164,18 @@ Steps:
 
 // ── Main agent loop ───────────────────────────────────────────────────────────
 
+// Plain message types we fully control — never trust SDK objects for history
+type PlainMessage =
+  | { role: 'system'; content: string }
+  | { role: 'user'; content: string }
+  | { role: 'assistant'; content: string | null; tool_calls: Array<{ id: string; type: 'function'; function: { name: string; arguments: string } }> }
+  | { role: 'tool'; tool_call_id: string; name: string; content: string }
+
 export async function runScrapingAgent(
   input: CreateCampaignInput,
   onProgress?: (message: string) => void
 ): Promise<AgentSeller[]> {
-  const messages: Array<{ role: string; content: string; tool_call_id?: string; name?: string }> = [
+  const messages: PlainMessage[] = [
     { role: 'system', content: buildSystemPrompt(input) },
     {
       role: 'user',
@@ -191,20 +198,30 @@ export async function runScrapingAgent(
     if (!choice) break
 
     const msg = choice.message
-    const toolCalls = msg?.toolCalls ?? []
+    const rawToolCalls = msg?.toolCalls ?? []
 
-    // Patch missing tool call IDs before pushing to history
-    const patchedToolCalls = toolCalls.map((tc, idx) => ({
-      ...tc,
-      id: tc.id ?? `call_${i}_${idx}`,
+    // Build clean plain-object tool calls with guaranteed non-null IDs
+    const toolCalls = rawToolCalls.map((tc, idx) => ({
+      id: (tc.id && tc.id !== 'None' ? tc.id : `call_${i}_${idx}`),
+      type: 'function' as const,
+      function: {
+        name: tc.function.name,
+        arguments:
+          typeof tc.function.arguments === 'string'
+            ? tc.function.arguments
+            : JSON.stringify(tc.function.arguments),
+      },
     }))
 
-    // Push assistant message with patched IDs
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    messages.push({ ...(msg as any), toolCalls: patchedToolCalls })
+    // Push plain assistant message (no SDK object, just raw JSON-serializable data)
+    messages.push({
+      role: 'assistant',
+      content: typeof msg?.content === 'string' ? msg.content : null,
+      tool_calls: toolCalls,
+    })
 
     // Agent finished
-    if (choice.finishReason === 'stop' || patchedToolCalls.length === 0) {
+    if (choice.finishReason === 'stop' || toolCalls.length === 0) {
       const text = typeof msg?.content === 'string' ? msg.content : ''
       onProgress?.(`Agent done after ${i + 1} iterations`)
 
@@ -221,17 +238,14 @@ export async function runScrapingAgent(
     }
 
     // Execute tool calls
-    for (const toolCall of patchedToolCalls) {
+    for (const toolCall of toolCalls) {
       const fnName = toolCall.function.name
-      const fnArgs =
-        typeof toolCall.function.arguments === 'string'
-          ? JSON.parse(toolCall.function.arguments)
-          : toolCall.function.arguments
+      const fnArgs = JSON.parse(toolCall.function.arguments) as Record<string, string>
 
       onProgress?.(`🔧 ${fnName}: ${JSON.stringify(fnArgs).slice(0, 80)}...`)
       console.log(`[agent] Tool: ${fnName}`, fnArgs)
 
-      const result = await executeTool(fnName, fnArgs as Record<string, string>)
+      const result = await executeTool(fnName, fnArgs)
 
       messages.push({
         role: 'tool',
