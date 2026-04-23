@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ data: { ...campaign, status: 'generating' } }, { status: 201 })
   } catch (err) {
     console.error('[POST /api/campaigns]', err)
-    return NextResponse.json({ data: null, error: 'Failed to create campaign' }, { status: 500 })
+    const message = err instanceof Error ? err.message : JSON.stringify(err)
+    return NextResponse.json({ data: null, error: message }, { status: 500 })
   }
 }
