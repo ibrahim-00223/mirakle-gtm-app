@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Users, Search, Mail, ExternalLink } from 'lucide-react'
 import { useContacts } from '@/hooks/useContacts'
 import { cn, getMailStatusColor, getMailStatusLabel, formatDate } from '@/lib/utils'
-import type { MailStatus, ContactWithOutreachContext } from '@/types'
+import type { MailStatus, OutreachStatus, ContactWithOutreachContext } from '@/types'
 
 const mailStatuses: { value: MailStatus | ''; label: string }[] = [
   { value: '', label: 'Tous les statuts' },
@@ -19,7 +19,7 @@ export default function ContactsPage() {
   const [mailFilter, setMailFilter] = useState<MailStatus | ''>('')
 
   const { data: contacts, isLoading } = useContacts({
-    mailStatus: mailFilter || undefined,
+    outreachStatus: (mailFilter as OutreachStatus) || undefined,
   })
 
   const filtered = ((contacts || []) as ContactWithOutreachContext[]).filter((c) =>
