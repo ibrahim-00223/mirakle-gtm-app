@@ -191,11 +191,20 @@ export async function runScrapingAgent(
     if (!choice) break
 
     const msg = choice.message
+    const toolCalls = msg?.toolCalls ?? []
+
+    // Patch missing tool call IDs before pushing to history
+    const patchedToolCalls = toolCalls.map((tc, idx) => ({
+      ...tc,
+      id: tc.id ?? `call_${i}_${idx}`,
+    }))
+
+    // Push assistant message with patched IDs
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    messages.push(msg as any)
+    messages.push({ ...(msg as any), toolCalls: patchedToolCalls })
 
     // Agent finished
-    if (choice.finishReason === 'stop' || !msg?.toolCalls?.length) {
+    if (choice.finishReason === 'stop' || patchedToolCalls.length === 0) {
       const text = typeof msg?.content === 'string' ? msg.content : ''
       onProgress?.(`Agent done after ${i + 1} iterations`)
 
@@ -212,7 +221,7 @@ export async function runScrapingAgent(
     }
 
     // Execute tool calls
-    for (const toolCall of msg?.toolCalls ?? []) {
+    for (const toolCall of patchedToolCalls) {
       const fnName = toolCall.function.name
       const fnArgs =
         typeof toolCall.function.arguments === 'string'
