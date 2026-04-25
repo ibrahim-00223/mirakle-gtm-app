@@ -71,7 +71,7 @@ export async function runScrapingPipeline(
     if (!seller.name) continue
 
     try {
-      // ── 1. Upsert company (conflict sur website_url si présent, sinon sur name) ──
+      // ── 1. Find or create company (SELECT → INSERT/UPDATE, no upsert needed) ──
       const companyPayload = {
         name: seller.name,
         website_url: seller.website_url ?? null,
@@ -90,31 +90,34 @@ export async function runScrapingPipeline(
 
       let companyId: string | null = null
 
+      // Try to find existing company by website_url or name
+      let lookupQuery = supabase.from('companies').select('id').limit(1)
       if (seller.website_url) {
-        // Upsert sur website_url (index unique partiel)
-        const { data, error } = await supabase
-          .from('companies')
-          .upsert(companyPayload, { onConflict: 'website_url' })
-          .select('id')
-          .single()
-
-        if (error) {
-          console.warn(`[pipeline] upsert by website_url failed for "${seller.name}":`, error.message)
-        } else {
-          companyId = data?.id ?? null
-        }
+        lookupQuery = lookupQuery.or(`website_url.eq.${seller.website_url},name.eq.${seller.name}`)
+      } else {
+        lookupQuery = lookupQuery.eq('name', seller.name)
       }
+      const { data: existing } = await lookupQuery.maybeSingle()
 
-      if (!companyId) {
-        // Fallback : upsert sur name
+      if (existing?.id) {
+        // Update existing record
         const { data, error } = await supabase
           .from('companies')
-          .upsert(companyPayload, { onConflict: 'name' })
+          .update(companyPayload)
+          .eq('id', existing.id)
           .select('id')
           .single()
-
+        if (error) console.warn(`[pipeline] update failed for "${seller.name}":`, error.message)
+        else companyId = data?.id ?? null
+      } else {
+        // Insert new record
+        const { data, error } = await supabase
+          .from('companies')
+          .insert(companyPayload)
+          .select('id')
+          .single()
         if (error) {
-          console.warn(`[pipeline] upsert by name failed for "${seller.name}":`, error.message)
+          console.warn(`[pipeline] insert failed for "${seller.name}":`, error.message)
           continue
         }
         companyId = data?.id ?? null
@@ -125,11 +128,18 @@ export async function runScrapingPipeline(
         continue
       }
 
-      // ── 2. Lier l'entreprise à la campagne ────────────────────────────────
-      const { error: linkError } = await supabase
+      // ── 2. Lier l'entreprise à la campagne (SELECT → INSERT) ─────────────
+      const { data: existingLink } = await supabase
         .from('campaign_companies')
-        .upsert(
-          {
+        .select('id')
+        .eq('campaign_id', campaignId)
+        .eq('company_id', companyId)
+        .maybeSingle()
+
+      if (!existingLink) {
+        const { error: linkError } = await supabase
+          .from('campaign_companies')
+          .insert({
             campaign_id: campaignId,
             company_id: companyId,
             match_score: Math.floor(Math.random() * 25) + 65,
@@ -137,13 +147,11 @@ export async function runScrapingPipeline(
             status: 'pending',
             added_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'campaign_id,company_id', ignoreDuplicates: true }
-        )
-
-      if (linkError) {
-        console.warn(`[pipeline] Failed to link company to campaign:`, linkError.message)
-        continue
+          })
+        if (linkError) {
+          console.warn(`[pipeline] Failed to link company to campaign:`, linkError.message)
+          continue
+        }
       }
 
       enrichedCount++
@@ -177,15 +185,21 @@ export async function runScrapingPipeline(
 
         if (!contact) continue
 
-        await supabase.from('campaign_contacts').upsert(
-          {
+        const { data: existingCc } = await supabase
+          .from('campaign_contacts')
+          .select('id')
+          .eq('campaign_id', campaignId)
+          .eq('contact_id', contact.id)
+          .maybeSingle()
+
+        if (!existingCc) {
+          await supabase.from('campaign_contacts').insert({
             campaign_id: campaignId,
             contact_id: contact.id,
             company_id: companyId,
             outreach_status: 'pending',
-          },
-          { onConflict: 'campaign_id,contact_id', ignoreDuplicates: true }
-        )
+          })
+        }
 
         contactCount++
       }
