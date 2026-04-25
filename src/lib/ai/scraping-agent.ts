@@ -3,7 +3,38 @@ import { unlockUrl } from '@/lib/brightdata/client'
 import type { CreateCampaignInput } from '@/types'
 
 const MISTRAL_API = 'https://api.mistral.ai/v1/chat/completions'
-const MISTRAL_MODEL = 'mistral-large-latest'
+// mistral-small has 10× higher rate limits than large; sufficient for prospecting
+const MISTRAL_MODEL = process.env.MISTRAL_MODEL ?? 'mistral-small-latest'
+
+// ── Retry helper ─────────────────────────────────────────────────────────────
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxAttempts = 5,
+  baseDelayMs = 15_000
+): Promise<T> {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      const is429 = message.includes('429') || message.includes('rate_limit') || message.includes('Rate limit')
+      if (!is429 || attempt === maxAttempts) throw err
+
+      // Honour Retry-After if the raw response embedded it, otherwise exponential back-off
+      const retryAfterMatch = message.match(/retry.after[": ]+(\d+)/i)
+      const waitMs = retryAfterMatch
+        ? parseInt(retryAfterMatch[1], 10) * 1000
+        : baseDelayMs * Math.pow(2, attempt - 1)  // 15s, 30s, 60s, 120s
+
+      console.warn(`[mistral] 429 rate-limited — waiting ${waitMs / 1000}s before retry (attempt ${attempt}/${maxAttempts})`)
+      await sleep(waitMs)
+    }
+  }
+  throw new Error('withRetry: unreachable')
+}
 
 // ── Tool definitions ─────────────────────────────────────────────────────────
 
@@ -64,22 +95,24 @@ interface MistralChoice {
 }
 
 async function mistralChat(messages: unknown[]): Promise<MistralChoice> {
-  const res = await fetch(MISTRAL_API, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${process.env.MISTRAL_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ model: MISTRAL_MODEL, messages, tools: TOOLS, tool_choice: 'auto' }),
+  return withRetry(async () => {
+    const res = await fetch(MISTRAL_API, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.MISTRAL_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ model: MISTRAL_MODEL, messages, tools: TOOLS, tool_choice: 'auto' }),
+    })
+
+    if (!res.ok) {
+      const body = await res.text()
+      throw new Error(`Mistral API ${res.status}: ${body}`)
+    }
+
+    const data = await res.json() as { choices: MistralChoice[] }
+    return data.choices[0]
   })
-
-  if (!res.ok) {
-    const body = await res.text()
-    throw new Error(`Mistral API ${res.status}: ${body}`)
-  }
-
-  const data = await res.json() as { choices: MistralChoice[] }
-  return data.choices[0]
 }
 
 // ── Tool execution ────────────────────────────────────────────────────────────
@@ -214,6 +247,8 @@ export async function runScrapingAgent(
   const MAX_ITERATIONS = 12
 
   for (let i = 0; i < MAX_ITERATIONS; i++) {
+    // Small pause between iterations to stay well under rate limits
+    if (i > 0) await sleep(2000)
     const choice = await mistralChat(messages)
     const msg = choice.message
     const rawToolCalls = msg.tool_calls ?? []
