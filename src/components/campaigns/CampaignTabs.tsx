@@ -7,7 +7,7 @@ import { MatchingTable } from '@/components/matching/MatchingTable'
 import { ContactsTable } from '@/components/contacts/ContactsTable'
 import { OutreachBuilder } from '@/components/campaigns/OutreachBuilder'
 import { cn } from '@/lib/utils'
-import { useLaunchMatching } from '@/hooks/useMatching'
+import { useLaunchMatching, useLaunchScraping } from '@/hooks/useMatching'
 import type { Campaign } from '@/types'
 
 const tabs = [
@@ -27,6 +27,7 @@ interface CampaignTabsProps {
 export function CampaignTabs({ campaignId, campaign }: CampaignTabsProps) {
   const [active, setActive] = useState<TabId>('entreprises')
   const launchMatching = useLaunchMatching()
+  const launchScraping = useLaunchScraping()
 
   return (
     <div>
@@ -56,29 +57,59 @@ export function CampaignTabs({ campaignId, campaign }: CampaignTabsProps) {
       {/* Tab content */}
       {active === 'entreprises' && (
         <div className="space-y-4">
-          {/* Lancer le Matching */}
-          <div className="flex items-center justify-between">
+          {/* Actions bar */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <p className="text-xs text-[#30373E]/50">
               Entreprises identifiées par la campagne
             </p>
-            <button
-              onClick={() => launchMatching.mutate(campaignId)}
-              disabled={launchMatching.isPending}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-[#2764FF] text-white rounded-lg hover:bg-[#1a4fd8] transition-colors disabled:opacity-50"
-            >
-              {launchMatching.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <TrendingUp className="w-4 h-4" />
-              )}
-              {launchMatching.isPending ? 'Matching en cours…' : 'Lancer le Matching'}
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Bouton Scraping */}
+              <button
+                onClick={() => launchScraping.mutate(campaignId)}
+                disabled={launchScraping.isPending || launchMatching.isPending}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-[#03182F] text-white rounded-lg hover:bg-[#0a2540] transition-colors disabled:opacity-50"
+              >
+                {launchScraping.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Rocket className="w-4 h-4" />
+                )}
+                {launchScraping.isPending ? 'Scraping en cours…' : 'Lancer le Scraping'}
+              </button>
+
+              {/* Bouton Matching */}
+              <button
+                onClick={() => launchMatching.mutate(campaignId)}
+                disabled={launchMatching.isPending || launchScraping.isPending}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-[#2764FF] text-white rounded-lg hover:bg-[#1a4fd8] transition-colors disabled:opacity-50"
+              >
+                {launchMatching.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <TrendingUp className="w-4 h-4" />
+                )}
+                {launchMatching.isPending ? 'Matching en cours…' : 'Lancer le Matching'}
+              </button>
+            </div>
           </div>
+
+          {/* Feedback messages */}
+          {launchScraping.isSuccess && (
+            <p className="text-xs text-[#03182F] bg-[#F2F8FF] border border-[#2764FF]/20 rounded-lg px-3 py-2">
+              🔍 Scraping lancé — les sellers apparaîtront dans quelques instants.
+            </p>
+          )}
+          {launchScraping.isError && (
+            <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              ✗ Erreur lors du lancement du scraping. Vérifiez la configuration N8N ou BrightData.
+            </p>
+          )}
           {launchMatching.isSuccess && (
             <p className="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
               ✓ Matching lancé — les scores seront mis à jour dans quelques instants.
             </p>
           )}
+
           <CompaniesTable campaignId={campaignId} />
         </div>
       )}

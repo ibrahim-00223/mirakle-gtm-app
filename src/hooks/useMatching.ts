@@ -10,6 +10,22 @@ interface MatchingJob {
   started_at: string
 }
 
+interface ScrapingJob {
+  job_id: string | null
+  status: string
+  campaign_id: string
+  message: string
+}
+
+async function launchScraping(campaignId: string): Promise<ScrapingJob> {
+  const res = await fetch(`/api/campaigns/${campaignId}/scraping`, {
+    method: 'POST',
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Failed to launch scraping')
+  return json.data
+}
+
 async function launchMatching(campaignId: string): Promise<MatchingJob> {
   const res = await fetch(`/api/campaigns/${campaignId}/matching`, {
     method: 'POST',
@@ -30,6 +46,20 @@ async function fetchMatchResults(campaignId: string): Promise<CompanyWithCampaig
     if (a.status === 'qualified' && b.status !== 'qualified') return -1
     if (b.status === 'qualified' && a.status !== 'qualified') return 1
     return (b.match_score ?? 0) - (a.match_score ?? 0)
+  })
+}
+
+export function useLaunchScraping() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: launchScraping,
+    onSuccess: (_, campaignId) => {
+      // Repolling des entreprises après le scraping
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['companies'] })
+        queryClient.invalidateQueries({ queryKey: ['campaigns'] })
+      }, 3000)
+    },
   })
 }
 
