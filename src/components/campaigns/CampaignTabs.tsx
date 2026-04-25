@@ -7,7 +7,7 @@ import { MatchingTable } from '@/components/matching/MatchingTable'
 import { ContactsTable } from '@/components/contacts/ContactsTable'
 import { OutreachBuilder } from '@/components/campaigns/OutreachBuilder'
 import { cn } from '@/lib/utils'
-import { useLaunchMatching, useLaunchScraping } from '@/hooks/useMatching'
+import { useLaunchMatching, useLaunchScraping, useLaunchContacts } from '@/hooks/useMatching'
 import type { Campaign } from '@/types'
 
 const tabs = [
@@ -27,8 +27,10 @@ interface CampaignTabsProps {
 export function CampaignTabs({ campaignId, campaign }: CampaignTabsProps) {
   const [active, setActive] = useState<TabId>('entreprises')
   const [scrapingActive, setScrapingActive] = useState(false)
+  const [contactsActive, setContactsActive] = useState(false)
   const launchMatching = useLaunchMatching()
   const launchScraping = useLaunchScraping()
+  const launchContacts = useLaunchContacts()
 
   // Polling toutes les 5s après un scraping lancé — s'arrête dès que des entreprises apparaissent
   const pollingInterval = scrapingActive ? 5000 : undefined
@@ -129,7 +131,52 @@ export function CampaignTabs({ campaignId, campaign }: CampaignTabsProps) {
         </div>
       )}
       {active === 'matching' && <MatchingTable campaignId={campaignId} />}
-      {active === 'contacts' && <ContactsTable campaignId={campaignId} />}
+      {active === 'contacts' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-xs text-[#30373E]/50">
+              Contacts clés identifiés pour chaque entreprise
+            </p>
+            <button
+              onClick={() => {
+                setContactsActive(true)
+                launchContacts.mutate(campaignId, {
+                  onSuccess: () => setTimeout(() => setContactsActive(false), 5 * 60 * 1000),
+                  onError: () => setContactsActive(false),
+                })
+              }}
+              disabled={launchContacts.isPending || contactsActive}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-[#03182F] text-white rounded-lg hover:bg-[#0a2540] transition-colors disabled:opacity-50"
+            >
+              {launchContacts.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : contactsActive ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <Users className="w-4 h-4" />
+              )}
+              {launchContacts.isPending
+                ? 'Lancement…'
+                : contactsActive
+                ? 'Recherche en cours…'
+                : 'Trouver les contacts'}
+            </button>
+          </div>
+
+          {launchContacts.isSuccess && (
+            <p className="text-xs text-[#03182F] bg-[#F2F8FF] border border-[#2764FF]/20 rounded-lg px-3 py-2">
+              👥 Recherche lancée — les contacts apparaîtront dans quelques instants via Cargo + Apify.
+            </p>
+          )}
+          {launchContacts.isError && (
+            <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              ✗ Erreur lors de la recherche. Vérifiez les clés CARGO_API_KEY et APIFY_API_TOKEN.
+            </p>
+          )}
+
+          <ContactsTable campaignId={campaignId} />
+        </div>
+      )}
       {active === 'outreach' && (
         <OutreachBuilder
           campaignId={campaignId}

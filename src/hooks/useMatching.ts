@@ -63,6 +63,24 @@ export function useLaunchScraping() {
   })
 }
 
+export function useLaunchContacts() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (campaignId: string) => {
+      const res = await fetch(`/api/campaigns/${campaignId}/contacts`, { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed to launch contact search')
+      return json.data
+    },
+    onSuccess: (_, campaignId) => {
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['contacts'] })
+        queryClient.invalidateQueries({ queryKey: ['campaigns'] })
+      }, 5000)
+    },
+  })
+}
+
 export function useLaunchMatching() {
   const queryClient = useQueryClient()
   return useMutation({
