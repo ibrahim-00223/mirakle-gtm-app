@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { getLinkedInUrlFromCargo } from '@/lib/cargo/client'
-import { extractContactsFromLinkedIn, getEmailFromContact } from '@/lib/apify/client'
+import { getLinkedInUrlFromCargo, getEmailFromCargo } from '@/lib/cargo/client'
+import { extractContactsFromLinkedIn } from '@/lib/apify/client'
 
 /**
  * POST /api/campaigns/[id]/contacts
@@ -126,9 +126,9 @@ async function runContactPipeline(
         if (!persona.first_name && !persona.last_name) continue
         if (!persona.linkedin_profile_url) continue
 
-        console.log(`[ContactPipeline] Email finder: ${persona.first_name} ${persona.last_name}`)
+        console.log(`[ContactPipeline] Cargo email finder: ${persona.first_name} ${persona.last_name}`)
 
-        const enriched = await getEmailFromContact({
+        const enriched = await getEmailFromCargo({
           first_name: persona.first_name,
           last_name: persona.last_name,
           company_linkedin_url: companyLinkedinUrl,
