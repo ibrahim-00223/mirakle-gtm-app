@@ -6,9 +6,9 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
  * Lance le Matching Engine pour une campagne donnée.
  * Crée un scraping_job de type 'find_sellers' et délègue à N8N ou traite localement.
  */
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const campaignId = params.id
+    const { id: campaignId } = await params
     const supabase = await createServerSupabaseClient()
 
     // Vérifier que la campagne existe

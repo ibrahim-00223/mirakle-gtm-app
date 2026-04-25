@@ -33,11 +33,12 @@ async function getCampaign(id: string): Promise<Campaign | null> {
 }
 
 interface CampaignDetailPageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export default async function CampaignDetailPage({ params }: CampaignDetailPageProps) {
-  const campaign = await getCampaign(params.id)
+  const { id } = await params
+  const campaign = await getCampaign(id)
 
   if (!campaign) {
     notFound()
