@@ -2,39 +2,8 @@ import * as cheerio from 'cheerio'
 import { unlockUrl } from '@/lib/brightdata/client'
 import type { CreateCampaignInput } from '@/types'
 
-const MISTRAL_API = 'https://api.mistral.ai/v1/chat/completions'
-// mistral-small has 10× higher rate limits than large; sufficient for prospecting
-const MISTRAL_MODEL = process.env.MISTRAL_MODEL ?? 'mistral-small-latest'
-
-// ── Retry helper ─────────────────────────────────────────────────────────────
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-
-async function withRetry<T>(
-  fn: () => Promise<T>,
-  maxAttempts = 5,
-  baseDelayMs = 15_000
-): Promise<T> {
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      return await fn()
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      const is429 = message.includes('429') || message.includes('rate_limit') || message.includes('Rate limit')
-      if (!is429 || attempt === maxAttempts) throw err
-
-      // Honour Retry-After if the raw response embedded it, otherwise exponential back-off
-      const retryAfterMatch = message.match(/retry.after[": ]+(\d+)/i)
-      const waitMs = retryAfterMatch
-        ? parseInt(retryAfterMatch[1], 10) * 1000
-        : baseDelayMs * Math.pow(2, attempt - 1)  // 15s, 30s, 60s, 120s
-
-      console.warn(`[mistral] 429 rate-limited — waiting ${waitMs / 1000}s before retry (attempt ${attempt}/${maxAttempts})`)
-      await sleep(waitMs)
-    }
-  }
-  throw new Error('withRetry: unreachable')
-}
+const OPENAI_API = 'https://api.openai.com/v1/chat/completions'
+const OPENAI_MODEL = process.env.OPENAI_SCRAPING_MODEL ?? 'gpt-4o-mini'
 
 // ── Tool definitions ─────────────────────────────────────────────────────────
 
@@ -77,40 +46,67 @@ const TOOLS = [
   },
 ]
 
-// ── Raw Mistral fetch (bypass SDK to control message format exactly) ──────────
+// ── OpenAI types ─────────────────────────────────────────────────────────────
 
-interface MistralToolCall {
+interface OpenAIToolCall {
   id: string
   type: 'function'
   function: { name: string; arguments: string }
 }
 
-interface MistralChoice {
+interface OpenAIChoice {
   finish_reason: string
   message: {
     role: string
     content: string | null
-    tool_calls?: MistralToolCall[]
+    tool_calls?: OpenAIToolCall[]
   }
 }
 
-async function mistralChat(messages: unknown[]): Promise<MistralChoice> {
+// ── Retry helper ─────────────────────────────────────────────────────────────
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+async function withRetry<T>(fn: () => Promise<T>, maxAttempts = 4, baseDelayMs = 10_000): Promise<T> {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      const isRateLimit = message.includes('429') || message.toLowerCase().includes('rate limit')
+      if (!isRateLimit || attempt === maxAttempts) throw err
+      const waitMs = baseDelayMs * Math.pow(2, attempt - 1)
+      console.warn(`[openai] 429 — waiting ${waitMs / 1000}s (attempt ${attempt}/${maxAttempts})`)
+      await sleep(waitMs)
+    }
+  }
+  throw new Error('withRetry: unreachable')
+}
+
+// ── Raw OpenAI fetch ──────────────────────────────────────────────────────────
+
+async function openaiChat(messages: unknown[]): Promise<OpenAIChoice> {
   return withRetry(async () => {
-    const res = await fetch(MISTRAL_API, {
+    const res = await fetch(OPENAI_API, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${process.env.MISTRAL_API_KEY}`,
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ model: MISTRAL_MODEL, messages, tools: TOOLS, tool_choice: 'auto' }),
+      body: JSON.stringify({
+        model: OPENAI_MODEL,
+        messages,
+        tools: TOOLS,
+        tool_choice: 'auto',
+      }),
     })
 
     if (!res.ok) {
       const body = await res.text()
-      throw new Error(`Mistral API ${res.status}: ${body}`)
+      throw new Error(`OpenAI API ${res.status}: ${body}`)
     }
 
-    const data = await res.json() as { choices: MistralChoice[] }
+    const data = await res.json() as { choices: OpenAIChoice[] }
     return data.choices[0]
   })
 }
@@ -235,7 +231,6 @@ export async function runScrapingAgent(
   input: CreateCampaignInput,
   onProgress?: (message: string) => void
 ): Promise<AgentSeller[]> {
-  // Pure JSON objects — sent verbatim to Mistral API via raw fetch
   const messages: unknown[] = [
     { role: 'system', content: buildSystemPrompt(input) },
     {
@@ -247,32 +242,20 @@ export async function runScrapingAgent(
   const MAX_ITERATIONS = 12
 
   for (let i = 0; i < MAX_ITERATIONS; i++) {
-    // Small pause between iterations to stay well under rate limits
-    if (i > 0) await sleep(2000)
-    const choice = await mistralChat(messages)
+    if (i > 0) await sleep(1500)
+
+    const choice = await openaiChat(messages)
     const msg = choice.message
-    const rawToolCalls = msg.tool_calls ?? []
+    const toolCalls: OpenAIToolCall[] = msg.tool_calls ?? []
 
-    // Normalize tool calls — guarantee non-null IDs
-    const toolCalls: MistralToolCall[] = rawToolCalls.map((tc, idx) => ({
-      id: tc.id && tc.id !== 'None' ? tc.id : `call_${i}_${idx}`,
-      type: 'function' as const,
-      function: {
-        name: tc.function.name,
-        arguments: typeof tc.function.arguments === 'string'
-          ? tc.function.arguments
-          : JSON.stringify(tc.function.arguments),
-      },
-    }))
-
-    // Push assistant message as plain object Mistral understands
+    // Push assistant message
     if (toolCalls.length > 0) {
-      messages.push({ role: 'assistant', content: msg.content ?? '', tool_calls: toolCalls })
+      messages.push({ role: 'assistant', content: msg.content ?? null, tool_calls: toolCalls })
     } else {
       messages.push({ role: 'assistant', content: msg.content ?? '' })
     }
 
-    // Agent finished
+    // Agent finished — no more tool calls
     if (choice.finish_reason === 'stop' || toolCalls.length === 0) {
       const text = msg.content ?? ''
       onProgress?.(`Agent done after ${i + 1} iterations`)
@@ -289,7 +272,7 @@ export async function runScrapingAgent(
       break
     }
 
-    // Execute tool calls and push tool results
+    // Execute tool calls and push results
     for (const toolCall of toolCalls) {
       const fnName = toolCall.function.name
       const fnArgs = JSON.parse(toolCall.function.arguments) as Record<string, string>
@@ -299,10 +282,10 @@ export async function runScrapingAgent(
 
       const result = await executeTool(fnName, fnArgs)
 
+      // OpenAI tool result format
       messages.push({
         role: 'tool',
         tool_call_id: toolCall.id,
-        name: fnName,
         content: result,
       })
     }
