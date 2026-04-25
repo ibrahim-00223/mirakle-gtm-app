@@ -1,5 +1,9 @@
 import type { Campaign } from '@/types'
 
+export function getMockCampaigns(): Campaign[] {
+  return mockCampaigns
+}
+
 export const mockCampaigns: Campaign[] = [
   {
     id: 'camp-001',

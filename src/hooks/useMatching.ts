@@ -1,0 +1,53 @@
+'use client'
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import type { CompanyWithCampaignContext } from '@/types'
+
+interface MatchingJob {
+  job_id: string
+  status: 'pending' | 'running' | 'completed' | 'failed'
+  campaign_id: string
+  started_at: string
+}
+
+async function launchMatching(campaignId: string): Promise<MatchingJob> {
+  const res = await fetch(`/api/campaigns/${campaignId}/matching`, {
+    method: 'POST',
+  })
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Failed to launch matching')
+  return json.data
+}
+
+async function fetchMatchResults(campaignId: string): Promise<CompanyWithCampaignContext[]> {
+  const res = await fetch(`/api/companies?campaign_id=${campaignId}`)
+  const json = await res.json()
+  if (!res.ok) throw new Error(json.error || 'Failed to fetch match results')
+
+  const companies: CompanyWithCampaignContext[] = json.data ?? []
+  // Trier : qualified en premier, puis par score décroissant
+  return companies.sort((a, b) => {
+    if (a.status === 'qualified' && b.status !== 'qualified') return -1
+    if (b.status === 'qualified' && a.status !== 'qualified') return 1
+    return (b.match_score ?? 0) - (a.match_score ?? 0)
+  })
+}
+
+export function useLaunchMatching() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: launchMatching,
+    onSuccess: (_, campaignId) => {
+      queryClient.invalidateQueries({ queryKey: ['companies', { campaignId }] })
+      queryClient.invalidateQueries({ queryKey: ['campaigns'] })
+    },
+  })
+}
+
+export function useMatchResults(campaignId?: string) {
+  return useQuery({
+    queryKey: ['match-results', campaignId],
+    queryFn: () => fetchMatchResults(campaignId!),
+    enabled: !!campaignId,
+  })
+}

@@ -18,6 +18,10 @@ export type OutreachStatus =
 /** @deprecated Use OutreachStatus */
 export type MailStatus = 'pending' | 'sent' | 'opened' | 'replied'
 export type MarketplaceType = 'mirakl' | 'external'
+export type NewMailStatus = 'draft' | 'generating' | 'review' | 'approved' | 'scheduled' | 'sent' | 'failed'
+export type OutreachAngle = 'roi' | 'seasonality' | 'partnership' | 'growth' | 'competitive'
+export type SeasonalContext = 'black_friday' | 'christmas' | 'chinese_ny' | 'back_to_school' | 'summer' | 'none'
+export type EnrichmentStep = 'linkedin_url' | 'contacts' | 'email_phone' | 'completed' | 'failed'
 
 // ── Core entities ─────────────────────────────────────────────────────────────
 
@@ -308,4 +312,66 @@ export interface MirakleMarketplace {
   name: string
   description: string
   categories: string[]
+}
+
+// ── Mail & Outreach types ─────────────────────────────────────────────────────
+
+export interface Mail {
+  id: string
+  campaign_id: string
+  contact_id: string | null
+  company_id: string | null
+  sequence_step: number
+  delay_days: number
+  angle?: OutreachAngle
+  tone?: EmailTone
+  subject_draft?: string
+  body_draft?: string
+  subject_final?: string
+  body_final?: string
+  status: NewMailStatus
+  ai_model?: string
+  ai_prompt_context?: Record<string, unknown>
+  generated_at?: string
+  approved_at?: string
+  approved_by?: string
+  scheduled_at?: string
+  sent_at?: string
+  provider_message_id?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface MailResponse {
+  id: string
+  mail_id: string
+  campaign_id: string
+  contact_id: string | null
+  response_type: 'opened' | 'clicked' | 'replied' | 'bounced' | 'unsubscribed'
+  raw_body?: string
+  received_at: string
+  provider_event_id?: string
+  metadata?: Record<string, unknown>
+  created_at: string
+}
+
+export interface OutreachConfig {
+  angle: OutreachAngle
+  tone: EmailTone
+  seasonal_context: SeasonalContext
+  custom_hook?: string
+  auto_mode: boolean
+  sequence_count: number
+  delays: number[]
+}
+
+export interface EmailDraft {
+  subject: string
+  body: string
+}
+
+export interface EnrichedContact extends Contact {
+  enrichment_step: EnrichmentStep
+  cargo_linkedin_url?: string
+  apify_extracted?: boolean
 }

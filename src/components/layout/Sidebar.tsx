@@ -1,17 +1,16 @@
 'use client'
 
-import { Home, Target, BarChart2, Building2, Users, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, Megaphone, Building2, Target, UserSearch, ChevronLeft, ChevronRight } from 'lucide-react'
 import { SidebarItem } from './SidebarItem'
 import { useSidebar } from './SidebarContext'
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { href: '/home', icon: Home, label: 'Accueil' },
-  { href: '/campagnes', icon: Target, label: 'Campagnes' },
-  { href: '/dashboard', icon: BarChart2, label: 'Dashboard' },
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/campagnes', icon: Megaphone, label: 'Campagnes' },
   { href: '/entreprises', icon: Building2, label: 'Entreprises' },
-  { href: '/contacts', icon: Users, label: 'Contacts' },
-  { href: '/docs', icon: BookOpen, label: 'Documentation' },
+  { href: '/matching', icon: Target, label: 'Matching' },
+  { href: '/enrichissement', icon: UserSearch, label: 'Enrichissement' },
 ]
 
 export function Sidebar() {

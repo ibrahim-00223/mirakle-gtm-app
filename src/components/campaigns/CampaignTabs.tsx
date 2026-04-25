@@ -1,26 +1,32 @@
 'use client'
 
 import { useState } from 'react'
-import { Building2, TrendingUp, Users } from 'lucide-react'
+import { Building2, TrendingUp, Users, Rocket, Loader2 } from 'lucide-react'
 import { CompaniesTable } from '@/components/companies/CompaniesTable'
 import { MatchingTable } from '@/components/matching/MatchingTable'
 import { ContactsTable } from '@/components/contacts/ContactsTable'
+import { OutreachBuilder } from '@/components/campaigns/OutreachBuilder'
 import { cn } from '@/lib/utils'
+import { useLaunchMatching } from '@/hooks/useMatching'
+import type { Campaign } from '@/types'
 
 const tabs = [
   { id: 'entreprises', label: 'Entreprises', icon: Building2 },
-  { id: 'matching', label: 'Matching', icon: TrendingUp },
+  { id: 'matching', label: 'Match', icon: TrendingUp },
   { id: 'contacts', label: 'Key Contacts', icon: Users },
+  { id: 'outreach', label: 'Outreach', icon: Rocket },
 ] as const
 
 type TabId = (typeof tabs)[number]['id']
 
 interface CampaignTabsProps {
   campaignId: string
+  campaign?: Campaign
 }
 
-export function CampaignTabs({ campaignId }: CampaignTabsProps) {
+export function CampaignTabs({ campaignId, campaign }: CampaignTabsProps) {
   const [active, setActive] = useState<TabId>('entreprises')
+  const launchMatching = useLaunchMatching()
 
   return (
     <div>
@@ -48,9 +54,44 @@ export function CampaignTabs({ campaignId }: CampaignTabsProps) {
       </div>
 
       {/* Tab content */}
-      {active === 'entreprises' && <CompaniesTable campaignId={campaignId} />}
+      {active === 'entreprises' && (
+        <div className="space-y-4">
+          {/* Lancer le Matching */}
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-[#30373E]/50">
+              Entreprises identifiées par la campagne
+            </p>
+            <button
+              onClick={() => launchMatching.mutate(campaignId)}
+              disabled={launchMatching.isPending}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-[#2764FF] text-white rounded-lg hover:bg-[#1a4fd8] transition-colors disabled:opacity-50"
+            >
+              {launchMatching.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <TrendingUp className="w-4 h-4" />
+              )}
+              {launchMatching.isPending ? 'Matching en cours…' : 'Lancer le Matching'}
+            </button>
+          </div>
+          {launchMatching.isSuccess && (
+            <p className="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+              ✓ Matching lancé — les scores seront mis à jour dans quelques instants.
+            </p>
+          )}
+          <CompaniesTable campaignId={campaignId} />
+        </div>
+      )}
       {active === 'matching' && <MatchingTable campaignId={campaignId} />}
       {active === 'contacts' && <ContactsTable campaignId={campaignId} />}
+      {active === 'outreach' && (
+        <OutreachBuilder
+          campaignId={campaignId}
+          campaignName={campaign?.name}
+          marketplaceName={campaign?.source_marketplace_name ?? undefined}
+          sellerSector={campaign?.sector}
+        />
+      )}
     </div>
   )
 }
