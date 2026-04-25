@@ -53,13 +53,25 @@ export async function POST(
       .update({ status: 'generating' })
       .eq('id', id)
 
+    // Mapper Campaign → CreateCampaignInput pour le pipeline
+    const pipelineInput = {
+      name: campaign.name,
+      sector: campaign.sector,
+      mode: campaign.mode,
+      source_marketplace_name: campaign.source_marketplace_name ?? undefined,
+      source_marketplace_id: campaign.source_marketplace_id ?? undefined,
+      catalog_size: campaign.catalog_size,
+      tone: campaign.tone,
+      target_regions: campaign.target_regions ?? [],
+    }
+
     // Déclencher le pipeline (BrightData ou N8N)
     if (isBrightDataConfigured()) {
-      runScrapingPipeline(id, campaign).catch((err) =>
+      runScrapingPipeline(id, pipelineInput).catch((err) =>
         console.error('[ManualScraping] BrightData pipeline failed:', err)
       )
     } else {
-      triggerWorkflow1(id, campaign).catch((err) =>
+      triggerWorkflow1(id, pipelineInput).catch((err) =>
         console.error('[ManualScraping] N8N Workflow1 trigger failed:', err)
       )
     }

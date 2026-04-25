@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Building2, TrendingUp, Users, Rocket, Loader2 } from 'lucide-react'
+import { Building2, TrendingUp, Users, Rocket, Loader2, RefreshCw } from 'lucide-react'
 import { CompaniesTable } from '@/components/companies/CompaniesTable'
 import { MatchingTable } from '@/components/matching/MatchingTable'
 import { ContactsTable } from '@/components/contacts/ContactsTable'
@@ -26,8 +26,12 @@ interface CampaignTabsProps {
 
 export function CampaignTabs({ campaignId, campaign }: CampaignTabsProps) {
   const [active, setActive] = useState<TabId>('entreprises')
+  const [scrapingActive, setScrapingActive] = useState(false)
   const launchMatching = useLaunchMatching()
   const launchScraping = useLaunchScraping()
+
+  // Polling toutes les 5s après un scraping lancé — s'arrête dès que des entreprises apparaissent
+  const pollingInterval = scrapingActive ? 5000 : undefined
 
   return (
     <div>
@@ -65,16 +69,27 @@ export function CampaignTabs({ campaignId, campaign }: CampaignTabsProps) {
             <div className="flex items-center gap-2">
               {/* Bouton Scraping */}
               <button
-                onClick={() => launchScraping.mutate(campaignId)}
+                onClick={() => {
+                  setScrapingActive(true)
+                  launchScraping.mutate(campaignId, {
+                    onSuccess: () => {
+                      // Arrêter le polling après 3 minutes max
+                      setTimeout(() => setScrapingActive(false), 3 * 60 * 1000)
+                    },
+                    onError: () => setScrapingActive(false),
+                  })
+                }}
                 disabled={launchScraping.isPending || launchMatching.isPending}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-[#03182F] text-white rounded-lg hover:bg-[#0a2540] transition-colors disabled:opacity-50"
               >
                 {launchScraping.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
+                ) : scrapingActive ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
                 ) : (
                   <Rocket className="w-4 h-4" />
                 )}
-                {launchScraping.isPending ? 'Scraping en cours…' : 'Lancer le Scraping'}
+                {launchScraping.isPending ? 'Lancement…' : scrapingActive ? 'Scraping en cours…' : 'Lancer le Scraping'}
               </button>
 
               {/* Bouton Matching */}
@@ -110,7 +125,7 @@ export function CampaignTabs({ campaignId, campaign }: CampaignTabsProps) {
             </p>
           )}
 
-          <CompaniesTable campaignId={campaignId} />
+          <CompaniesTable campaignId={campaignId} refetchInterval={pollingInterval} onDataLoaded={() => setScrapingActive(false)} />
         </div>
       )}
       {active === 'matching' && <MatchingTable campaignId={campaignId} />}

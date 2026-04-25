@@ -6,6 +6,8 @@ import type { CompanyWithCampaignContext, CompanyStatus } from '@/types'
 interface UseCompaniesOptions {
   campaignId?: string
   status?: CompanyStatus
+  /** Polling interval en ms. Utile pendant le scraping pour rafraîchir automatiquement. */
+  refetchInterval?: number
 }
 
 async function fetchCompanies(opts: UseCompaniesOptions): Promise<CompanyWithCampaignContext[]> {
@@ -39,6 +41,7 @@ export function useCompanies(opts: UseCompaniesOptions = {}) {
   const query = useQuery({
     queryKey: ['companies', opts],
     queryFn: () => fetchCompanies(opts),
+    refetchInterval: opts.refetchInterval,
   })
 
   const updateStatus = useMutation({

@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useCompanies } from '@/hooks/useCompanies'
 import { cn, getCompanyStatusColor, getCompanyStatusLabel } from '@/lib/utils'
 import { ScoreBar } from '@/components/matching/ScoreBar'
@@ -7,6 +8,10 @@ import type { CompanyWithCampaignContext } from '@/types'
 
 interface CompaniesTableProps {
   campaignId?: string
+  /** Intervalle de polling en ms (ex: 5000) */
+  refetchInterval?: number
+  /** Appelé dès que des données apparaissent — permet d'arrêter le polling */
+  onDataLoaded?: () => void
 }
 
 const marketplaceBadge = (mp: string) => (
@@ -18,8 +23,15 @@ const marketplaceBadge = (mp: string) => (
   </span>
 )
 
-export function CompaniesTable({ campaignId }: CompaniesTableProps) {
-  const { data: companies, isLoading, updateStatus } = useCompanies({ campaignId })
+export function CompaniesTable({ campaignId, refetchInterval, onDataLoaded }: CompaniesTableProps) {
+  const { data: companies, isLoading, updateStatus } = useCompanies({ campaignId, refetchInterval })
+
+  // Arrêter le polling dès que des entreprises arrivent
+  useEffect(() => {
+    if (companies && companies.length > 0 && onDataLoaded) {
+      onDataLoaded()
+    }
+  }, [companies, onDataLoaded])
 
   if (isLoading) {
     return (
