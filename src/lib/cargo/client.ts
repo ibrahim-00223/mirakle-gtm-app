@@ -88,6 +88,7 @@ async function triggerAndWait(
     console.log(`[Cargo] Run ${runUuid} — status: ${status}`)
 
     if (status === 'success') {
+      console.log(`[Cargo] runContext for ${runUuid}:`, JSON.stringify(body.runContext ?? {}, null, 2))
       return (body.runContext ?? {}) as Record<string, unknown>
     }
 
