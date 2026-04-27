@@ -118,15 +118,18 @@ export async function getLinkedInUrlFromCargo(domain: string): Promise<CargoLink
   try {
     const ctx = await triggerAndWait(workflowUuid, { company_url: domain }, 60_000)
 
-    // Cargo peut retourner le champ sous différents noms selon la config du workflow
+    // runContext structure: { start: {}, tool: { linkedinUrl, ... }, end: { "company linkedin url": ... } }
+    const tool = (ctx.tool ?? {}) as Record<string, unknown>
+    const end = (ctx.end ?? {}) as Record<string, unknown>
+
     const url =
-      (ctx.linkedinUrl as string) ??
-      (ctx.linkedin_url as string) ??
-      (ctx.linkedin_company_url as string) ??
-      (ctx.companyLinkedinUrl as string) ??
+      (end['company linkedin url'] as string) ||
+      (tool.linkedinUrl as string) ||
+      (tool.linkedin_url as string) ||
+      (ctx.linkedinUrl as string) ||
       null
 
-    return { linkedin_company_url: url, enriched: !!url }
+    return { linkedin_company_url: url || null, enriched: !!url }
   } catch (err) {
     console.error(`[Cargo] getLinkedInUrlFromCargo error for "${domain}":`, err)
     return { linkedin_company_url: null, enriched: false }
