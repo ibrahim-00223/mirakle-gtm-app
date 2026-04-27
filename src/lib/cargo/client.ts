@@ -115,7 +115,7 @@ export async function getLinkedInUrlFromCargo(domain: string): Promise<CargoLink
   const workflowUuid = process.env.CARGO_FIND_LINKEDIN_UUID ?? ''
 
   try {
-    const ctx = await triggerAndWait(workflowUuid, { domain }, 60_000)
+    const ctx = await triggerAndWait(workflowUuid, { company_url: domain }, 60_000)
 
     // Cargo peut retourner le champ sous différents noms selon la config du workflow
     const url =
